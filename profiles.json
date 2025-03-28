@@ -1,0 +1,87 @@
+{
+  "user_1": {
+    "user_id": "user_1",
+    "name": "CyberNett",
+    "about": "JustChillin'",
+    "cat_id": 1
+  },
+  "user_5": {
+    "user_id": "user_5",
+    "name": "Test User",
+    "about": "This is a test profile for gamification features",
+    "cat_id": 0,
+    "meowcoins": 92,
+    "xp": 192,
+    "completed_exercises": {
+      "exercise_001": {
+        "timestamp": "2025-03-24T17:42:00.635370",
+        "correct_answers": 8,
+        "meowcoins_earned": 16,
+        "xp_earned": 16,
+        "completion_count": 1
+      },
+      "exercise_002": {
+        "timestamp": "2025-03-24T17:42:06.789137",
+        "correct_answers": 10,
+        "meowcoins_earned": 20,
+        "xp_earned": 20,
+        "completion_count": 1
+      },
+      "exercise_003": {
+        "timestamp": "2025-03-24T17:42:08.827468",
+        "correct_answers": 10,
+        "meowcoins_earned": 20,
+        "xp_earned": 20,
+        "completion_count": 1
+      },
+      "exercise_004": {
+        "timestamp": "2025-03-24T17:42:10.879955",
+        "correct_answers": 10,
+        "meowcoins_earned": 20,
+        "xp_earned": 20,
+        "completion_count": 1
+      },
+      "exercise_005": {
+        "timestamp": "2025-03-24T17:42:12.933271",
+        "correct_answers": 10,
+        "meowcoins_earned": 20,
+        "xp_earned": 20,
+        "completion_count": 1
+      }
+    },
+    "inventory": [
+      "sunglasses"
+    ],
+    "equipped_items": [
+      "sunglasses"
+    ]
+  },
+  "user_3": {
+    "user_id": "user_3",
+    "name": "CyberNett",
+    "about": "Weeeee",
+    "cat_id": 0,
+    "health_condition": "none",
+    "chronotype": null,
+    "meowcoins": 30,
+    "xp": 30,
+    "completed_exercises": {
+      "exercise_fizyka-10-klas-fizyka-zakon-dodavannya-shvydkostey": {
+        "timestamp": "2025-03-28T08:53:55.522275",
+        "correct_answers": 5,
+        "meowcoins_earned": 10,
+        "xp_earned": 10,
+        "completion_count": 1
+      },
+      "fizyka-10-klas-fizyka-zakon-dodavannya-shvydkostey": {
+        "timestamp": "2025-03-28T08:54:41.677963",
+        "correct_answers": 1000000,
+        "meowcoins_earned": 20,
+        "xp_earned": 20,
+        "completion_count": 1
+      }
+    },
+    "inventory": [],
+    "equipped_items": []
+  }
+}

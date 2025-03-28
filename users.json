@@ -1,0 +1,44 @@
+{
+  "cybernett": {
+    "id": "user_1",
+    "username": "cybernett",
+    "password_hash": "e0926800c922a62838ebcaa1b2a0ff832bfacafec64e4f4d3c07dcf77ed17709",
+    "created_at": 1742318937.286926
+  },
+  "weee": {
+    "id": "user_2",
+    "username": "weee",
+    "password_hash": "124640bf2792a0cdce2c04e13326d67bf013bac6ce546616b04888e7c4e68631",
+    "created_at": 1742493055.8429353
+  },
+  "CyberNett": {
+    "id": "user_3",
+    "username": "CyberNett",
+    "password_hash": "e0926800c922a62838ebcaa1b2a0ff832bfacafec64e4f4d3c07dcf77ed17709",
+    "created_at": 1742493527.9226613
+  },
+  "sdkjnclkjsdanv": {
+    "id": "user_4",
+    "username": "sdkjnclkjsdanv",
+    "password_hash": "6bba8c6fa5eb734e5ac20c4254f65d59a406330029c9b23050458ca5a28752fc",
+    "created_at": 1742747115.457977
+  },
+  "testuser": {
+    "id": "user_5",
+    "username": "testuser",
+    "password_hash": "9f735e0df9a1ddc702bf0a1a7b83033f9f7153a00c29de82cedadc9957289b05",
+    "created_at": 1742830480.9075236
+  },
+  "testuser_1743141809": {
+    "id": "user_6",
+    "username": "testuser_1743141809",
+    "password_hash": "9f735e0df9a1ddc702bf0a1a7b83033f9f7153a00c29de82cedadc9957289b05",
+    "created_at": 1743141811.0462053
+  },
+  "testuser_1743141947": {
+    "id": "user_7",
+    "username": "testuser_1743141947",
+    "password_hash": "9f735e0df9a1ddc702bf0a1a7b83033f9f7153a00c29de82cedadc9957289b05",
+    "created_at": 1743141949.9890194
+  }
+}
