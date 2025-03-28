@@ -1,0 +1,113 @@
+{
+  "user_1": {
+    "user_id": "user_1",
+    "name": "CyberNett",
+    "about": "WEeeeee",
+    "cat_id": 1,
+    "meowcoins": 90,
+    "xp": 90,
+    "completed_exercises": {
+      "course_anhliyska-mova-10": {
+        "timestamp": "2025-03-25T14:57:34.014864",
+        "correct_answers": 5,
+        "meowcoins_earned": 10,
+        "xp_earned": 10,
+        "completion_count": 1
+      },
+      "lesson_zarubizhna-literatura-10-klas-zarubizhna-literatura-moris-meterlink-ideynyy-zmist-dramyfeyeriyi-blakytnyy-ptakh": {
+        "timestamp": "2025-03-25T17:03:55.445396",
+        "correct_answers": 4,
+        "meowcoins_earned": 8,
+        "xp_earned": 8,
+        "completion_count": 1
+      },
+      "lesson_ukrayinska-mova-10-klas-ukrayinska-mova-bahatoznachnist-synonimiya-y-antonimiya-frazeolohizmiv": {
+        "timestamp": "2025-03-25T17:14:45.907611",
+        "correct_answers": 3,
+        "meowcoins_earned": 6,
+        "xp_earned": 6,
+        "completion_count": 1
+      },
+      "lesson_khimiya-10-klas-khimiya-syntetychni-volokna-fizychni-vlastyvosti-ta-zastosuvannya": {
+        "timestamp": "2025-03-26T07:54:50.196703",
+        "correct_answers": 1,
+        "meowcoins_earned": 2,
+        "xp_earned": 2,
+        "completion_count": 1
+      },
+      "lesson_khimiya-10-klas-khimiya-zhyry-yak-predstavnyky-esteriv": {
+        "timestamp": "2025-03-26T14:23:04.067606",
+        "correct_answers": 2,
+        "meowcoins_earned": 4,
+        "xp_earned": 4,
+        "completion_count": 1
+      },
+      "lesson_heohrafiya-10-klas-heohrafiya-pryrodni-umovy-y-resursy-ekonomika-krayin-afryky": {
+        "timestamp": "2025-03-27T10:12:07.058152",
+        "correct_answers": 5,
+        "meowcoins_earned": 10,
+        "xp_earned": 10,
+        "completion_count": 2
+      },
+      "lesson_istoriya-ukrayiny-10-klas-istoriya-ukrayiny-voyenni-diyi-na-terytoriyi-ukrayiny-v-19141917-rr": {
+        "timestamp": "2025-03-26T17:06:40.579322",
+        "correct_answers": 2,
+        "meowcoins_earned": 4,
+        "xp_earned": 4,
+        "completion_count": 1
+      },
+      "lesson_ukrayinska-mova-10-klas-ukrayinska-mova-tvorennya-i-vidminyuvannya-imen-po-batkovi": {
+        "timestamp": "2025-03-26T17:14:45.763690",
+        "correct_answers": 3,
+        "meowcoins_earned": 6,
+        "xp_earned": 6,
+        "completion_count": 1
+      },
+      "lesson_ukrayinska-mova-10-klas-ukrayinska-mova-skladni-vypadky-vidminyuvannya-imennykiv": {
+        "timestamp": "2025-03-26T17:16:16.064217",
+        "correct_answers": 5,
+        "meowcoins_earned": 10,
+        "xp_earned": 10,
+        "completion_count": 1
+      },
+      "lesson_khimiya-10-klas-khimiya-alkeny-ta-alkiny-zahalni-ta-molekulyarni-formuly-alkeniv-ta-alkiniv": {
+        "timestamp": "2025-03-26T17:17:42.712367",
+        "correct_answers": 2,
+        "meowcoins_earned": 4,
+        "xp_earned": 4,
+        "completion_count": 1
+      },
+      "lesson_biolohiya-i-ekolohiya-10-klas-biolohiya-i-ekolohiya-enerhetychne-zabezpechennya-protsesiv-metabolizmu-sposoby-otrym-enerhiyi": {
+        "timestamp": "2025-03-27T18:05:03.766697",
+        "correct_answers": 4,
+        "meowcoins_earned": 8,
+        "xp_earned": 8,
+        "completion_count": 1
+      },
+      "lesson_anhliyska-mova-10-klas-anhliyska-mova-usna-movlennyeva-vzayemodiya-monoloh": {
+        "timestamp": "2025-03-27T19:00:59.864498",
+        "correct_answers": 5,
+        "meowcoins_earned": 10,
+        "xp_earned": 10,
+        "completion_count": 1
+      },
+      "lesson_heometriya-10-klas-heometriya-vymiryuvannya-vidstaney-u-prostori-vid-tochky-do-ploshchyny-vid-pryamoyi-do-ploshchyny": {
+        "timestamp": "2025-03-27T19:03:13.618885",
+        "correct_answers": 0,
+        "meowcoins_earned": 0,
+        "xp_earned": 0,
+        "completion_count": 1
+      }
+    },
+    "inventory": [],
+    "equipped_items": [],
+    "streak": {
+      "current_streak": 3,
+      "longest_streak": 3,
+      "last_activity_date": "2025-03-28"
+    },
+    "illness_id": 0,
+    "illness_name": "None",
+    "illness_name_ua": "Немає"
+  }
+}
