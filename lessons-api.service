@@ -1,0 +1,20 @@
+[Unit]
+Description=Lessons API (FastAPI)
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+WorkingDirectory=/home/xoperr/projects/server/API
+Environment="OPENROUTER_API_KEY=sk_your_api_key_here"
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/usr/bin/uvicorn main:app --host 127.0.0.1 --port 5000 --workers 2
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+MemoryMax=900M
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
