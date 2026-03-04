@@ -9,8 +9,6 @@ import logging
 import os
 
 import lessons_manager
-import auth_connector
-import profiles_connector
 
 # Configure logging
 logging.basicConfig(
