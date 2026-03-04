@@ -4,8 +4,8 @@ python-multipart==0.0.6
 python-dotenv==1.0.0
 gtts==2.3.2
 transformers==4.34.0
-torch==2.0.1
-torchaudio==2.0.2
+torch>=2.4.0
+torchaudio>=2.4.0
 librosa==0.10.1
 numpy>=1.26.0
 rich==13.0.0
