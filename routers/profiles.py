@@ -2,7 +2,8 @@
 Profiles and Gamification API routes (FastAPI version)
 """
 from fastapi import APIRouter, HTTPException, Header, Depends
-from pydantic import BaseModel, Optional
+from pydantic import BaseModel
+from typing import Optional
 import logging
 import profiles
 from routers.auth import get_current_user
