@@ -50,10 +50,15 @@ app = FastAPI(
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://puremind.xoperr.dev",
+        "http://localhost:3000",      # для локальної розробки
+        "http://localhost:5173",      # для Vite
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
+    max_age=3600,
 )
 
 # Import routers
