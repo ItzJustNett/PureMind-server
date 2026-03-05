@@ -52,6 +52,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://puremind.xoperr.dev",
+        "https://puremindd.netlify.app",  # Netlify deployment
         "http://localhost:3000",      # для локальної розробки
         "http://localhost:5173",      # для Vite
     ],
