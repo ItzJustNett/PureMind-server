@@ -70,10 +70,9 @@ def register_user(username: str, password: str, email: str = "") -> Tuple[Dict, 
     
     # Save users data
     save_users_data()
-    
+
     return {
-        "message": "User registered successfully",
-        "username": username,
+        "success": True,
         "user_id": user_id
     }, 201
 
@@ -99,19 +98,17 @@ def login_user(username: str, password: str) -> Tuple[Dict, int]:
     }
     
     return {
-        "message": "Login successful",
+        "success": True,
         "token": token,
-        "user_id": user_id,
-        "username": username
+        "user_id": user_id
     }, 200
 
 def logout_user(token: str) -> Tuple[Dict, int]:
     """Logout a user by invalidating their token"""
     if token in active_tokens:
-        username = active_tokens[token]["username"]
         del active_tokens[token]
-        return {"message": f"User {username} logged out successfully"}, 200
-    
+        return {"success": True, "message": "Logged out successfully"}, 200
+
     return {"error": "Invalid token"}, 401
 
 def validate_token(token: str) -> Optional[Dict]:
