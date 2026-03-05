@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import Optional
 import logging
 import profiles
+import async_managers
 from routers.auth import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -29,10 +30,19 @@ class EquipItemRequest(BaseModel):
 
 # Endpoints
 @router.get("/profiles/me")
-async def get_my_profile(user: dict = Depends(get_current_user)):
-    """Get current user's profile"""
+async def get_my_profile(authorization: str = None):
+    """Get current user's profile (optional auth)"""
     try:
-        profile = profiles.get_profile(user["user_id"])
+        if not authorization or not authorization.startswith("Bearer "):
+            return {"error": "No authentication provided", "message": "Please login to access your profile"}, 401
+
+        token = authorization.split(" ")[1]
+        user_info = await async_managers.validate_token_async(token)
+
+        if not user_info:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        profile = profiles.get_profile(user_info["user_id"])
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
         return profile
