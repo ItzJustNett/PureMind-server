@@ -47,7 +47,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS
+# Enable CORS (must be first middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -58,12 +58,24 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Authorization", "*"],
     max_age=3600,
 )
 
 # Import routers
 from routers import lessons, auth, profiles, speech, debug
+
+# Exception handler for HTTPException to ensure CORS headers are included
+from fastapi import HTTPException
+from starlette.responses import JSONResponse
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 # Include routers
 app.include_router(lessons.router)
