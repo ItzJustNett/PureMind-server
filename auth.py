@@ -52,17 +52,18 @@ def hash_password(password: str) -> str:
     # Using SHA-256 for simplicity; in production, use a proper password hashing algorithm
     return hashlib.sha256(password.encode()).hexdigest()
 
-def register_user(username: str, password: str) -> Tuple[Dict, int]:
+def register_user(username: str, password: str, email: str = "") -> Tuple[Dict, int]:
     """Register a new user"""
     # Check if username already exists
     if username in users_data:
         return {"error": "Username already exists"}, 400
-    
+
     # Create new user
     user_id = f"user_{len(users_data) + 1}"
     users_data[username] = {
         "id": user_id,
         "username": username,
+        "email": email,
         "password_hash": hash_password(password),
         "created_at": time.time()
     }

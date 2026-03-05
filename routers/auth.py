@@ -14,6 +14,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 class RegisterRequest(BaseModel):
     username: str
     password: str
+    email: str
 
 class LoginRequest(BaseModel):
     username: str
@@ -58,7 +59,7 @@ async def get_current_user(authorization: str = Header(...)) -> dict:
 async def register(data: RegisterRequest):
     """Register a new user"""
     try:
-        result, status = auth.register_user(data.username, data.password)
+        result, status = auth.register_user(data.username, data.password, data.email)
 
         if status != 201:
             raise HTTPException(status_code=status, detail=result.get("error", "Registration failed"))

@@ -23,7 +23,8 @@ def register_endpoint():
             return jsonify({"error": "Username and password are required"}), 400
         
         # Register user
-        result, status_code = auth.register_user(data["username"], data["password"])
+        email = data.get("email", "")
+        result, status_code = auth.register_user(data["username"], data["password"], email)
         
         return jsonify(result), status_code
     
