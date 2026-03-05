@@ -118,6 +118,10 @@ def validate_token(token: str) -> Optional[Dict]:
     
     return None
 
+def _get_user(username: str) -> Optional[Dict]:
+    """Get user by username (internal function for auth checks)"""
+    return users_data.get(username)
+
 def get_user_by_id(user_id: str) -> Optional[Dict]:
     """Get user by ID"""
     for username, user_data in users_data.items():
@@ -126,7 +130,7 @@ def get_user_by_id(user_id: str) -> Optional[Dict]:
             user_info = user_data.copy()
             user_info.pop("password_hash", None)
             return user_info
-    
+
     return None
 
 # Initialize user data when the module is imported
