@@ -9,6 +9,7 @@ import logging
 import os
 
 import lessons_manager
+from database import init_db, check_db_connection, close_db
 
 # Configure logging
 logging.basicConfig(
@@ -25,8 +26,17 @@ async def lifespan(app: FastAPI):
     import async_managers
 
     logger.info("Starting up Lessons API (FastAPI)")
-    lessons_manager.load_lessons_data()
-    logger.info(f"Lessons data initialized with {len(lessons_manager.lessons_data)} lessons")
+
+    # Initialize database
+    if init_db():
+        logger.info("Database initialized successfully")
+        if check_db_connection():
+            logger.info("Database connection verified")
+        else:
+            logger.warning("Database connection check failed - API may not work properly")
+    else:
+        logger.error("Failed to initialize database - API will not work properly")
+
     logger.info(f"OpenRouter API Key configured: {bool(lessons_manager.OPENROUTER_API_KEY)}")
 
     # Start token cleanup task
@@ -37,6 +47,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     cleanup_task.cancel()
+    close_db()
     logger.info("Shutting down Lessons API")
 
 # Create FastAPI app
@@ -89,11 +100,20 @@ app.include_router(debug.router)
 async def home():
     """Home endpoint to provide basic information about the API"""
     try:
-        lesson_count = len(lessons_manager.lessons_data)
-        course_ids = set()
-        for lesson in lessons_manager.lessons_data.values():
-            if 'course_id' in lesson:
-                course_ids.add(lesson.get('course_id'))
+        # Get lesson count from database
+        from database import SessionLocal
+        from db_managers import lesson_manager as db_lesson_manager
+
+        db = SessionLocal()
+        try:
+            lessons = db_lesson_manager.list_lessons(db)
+            lesson_count = len(lessons)
+            course_ids = set()
+            for lesson in lessons:
+                if 'course_id' in lesson:
+                    course_ids.add(lesson.get('course_id'))
+        finally:
+            db.close()
 
         return {
             "name": "Lessons API",

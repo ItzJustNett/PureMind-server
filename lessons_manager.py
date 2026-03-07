@@ -32,39 +32,30 @@ OPENROUTER_HEADERS = {
     "Content-Type": "application/json"
 }
 
-# Lessons data global variable
-lessons_data = {}
-
-def load_lessons_data(file_path: str = 'lessons.json') -> Dict:
-    """Load lessons data from the JSON file"""
-    global lessons_data
-    try:
-        # Read the lessons.json file
-        with open(file_path, 'r', encoding='utf-8') as file:
-            lessons_data = json.load(file)
-        logger.info(f"Loaded {len(lessons_data)} lessons")
-        return lessons_data
-    except Exception as e:
-        logger.error(f"Error loading lessons data: {e}")
-        return {}
+# Lessons data - now loaded from database
+from database import SessionLocal
+from db_managers import lesson_manager as db_lesson_manager
 
 def search_lessons(query: str) -> List[Dict]:
     """Search lessons by title or ID"""
     if not query:
         return []
-    
-    query = query.lower()
-    results = [lesson for lesson in lessons_data.values() 
-               if query in lesson.get('title', '').lower() or 
-                  query in lesson.get('id', '').lower()]
-    
-    return results
+
+    db = SessionLocal()
+    try:
+        return db_lesson_manager.search_lessons(db, query)
+    finally:
+        db.close()
 
 def generate_lesson_test(lesson_id: str) -> Tuple[Dict, int]:
     """Generate a test for a specific lesson using OpenRouter API"""
     try:
-        lesson = lessons_data.get(lesson_id)
-        
+        db = SessionLocal()
+        try:
+            lesson = db_lesson_manager.get_lesson(db, lesson_id)
+        finally:
+            db.close()
+
         if not lesson:
             return {"error": "Lesson not found"}, 404
         
@@ -201,36 +192,43 @@ def generate_lesson_test(lesson_id: str) -> Tuple[Dict, int]:
 
 def get_lesson(lesson_id: str) -> Optional[Dict]:
     """Get a specific lesson by ID"""
-    return lessons_data.get(lesson_id)
+    db = SessionLocal()
+    try:
+        return db_lesson_manager.get_lesson(db, lesson_id)
+    finally:
+        db.close()
 
 def get_youtube_link(lesson_id: str) -> Optional[Dict]:
     """Get the YouTube link for a specific lesson"""
-    lesson = lessons_data.get(lesson_id)
-    
+    lesson = get_lesson(lesson_id)
+
     if not lesson or not lesson.get('youtube_link'):
         return None
-    
+
     return {
-        "id": lesson.get('id'),
+        "id": lesson.get('lesson_id', lesson_id),
         "title": lesson.get('title'),
         "youtube_link": lesson.get('youtube_link')
     }
 
 def list_lessons() -> List[Dict]:
     """List all lessons (simplified)"""
-    simplified_list = [{
-        "id": lesson.get('id'),
-        "title": lesson.get('title'),
-        "course_id": lesson.get('course_id')
-    } for lesson in lessons_data.values()]
-    
-    return simplified_list
+    db = SessionLocal()
+    try:
+        lessons = db_lesson_manager.list_lessons(db)
+        return [{
+            "id": lesson.get('lesson_id'),
+            "title": lesson.get('title'),
+            "course_id": lesson.get('course_id')
+        } for lesson in lessons]
+    finally:
+        db.close()
 
 def generate_conspect(lesson_id: str) -> Tuple[Dict, int]:
     """Generate a lesson summary using OpenRouter API with Moonlight model"""
     try:
-        lesson = lessons_data.get(lesson_id)
-        
+        lesson = get_lesson(lesson_id)
+
         if not lesson:
             return {"error": "Lesson not found"}, 404
         
@@ -321,8 +319,12 @@ def generate_test(course_id: str) -> Tuple[Dict, int]:
     """Generate a course test using OpenRouter API with Moonlight model"""
     try:
         # Check if course exists
-        course_lessons = [lesson for lesson in lessons_data.values() if lesson.get('course_id') == course_id]
-        
+        db = SessionLocal()
+        try:
+            course_lessons = db_lesson_manager.get_course_lessons(db, course_id)
+        finally:
+            db.close()
+
         if not course_lessons:
             return {"error": f"No lessons found for course: {course_id}"}, 404
         
@@ -453,11 +455,11 @@ def generate_test(course_id: str) -> Tuple[Dict, int]:
 
 def get_video_url(lesson_id: str) -> Optional[str]:
     """Get only the YouTube URL for a specific lesson"""
-    lesson = lessons_data.get(lesson_id)
-    
+    lesson = get_lesson(lesson_id)
+
     if not lesson or not lesson.get('youtube_link'):
         return None
-    
+
     return lesson.get('youtube_link')
 
 def test_openrouter_connection() -> Tuple[Dict, int]:
@@ -501,5 +503,4 @@ def test_openrouter_connection() -> Tuple[Dict, int]:
             "error": f"Error testing OpenRouter connection: {str(e)}"
         }, 500
 
-# Initialize data when the module is imported
-load_lessons_data()
+# Database is now used instead of JSON files - initialized in main.py

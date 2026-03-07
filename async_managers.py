@@ -42,7 +42,8 @@ async def list_lessons_async():
 async def generate_lesson_test_async(lesson_id: str):
     """Generate test using async httpx instead of blocking requests"""
     try:
-        lesson = lessons_manager.lessons_data.get(lesson_id)
+        # Use blocking get_lesson to retrieve from database
+        lesson = lessons_manager.get_lesson(lesson_id)
 
         if not lesson:
             return {"error": "Lesson not found"}, 404
@@ -132,7 +133,8 @@ async def generate_lesson_test_async(lesson_id: str):
 async def generate_conspect_async(lesson_id: str):
     """Generate conspect (summary) using async httpx"""
     try:
-        lesson = lessons_manager.lessons_data.get(lesson_id)
+        # Use blocking get_lesson to retrieve from database
+        lesson = lessons_manager.get_lesson(lesson_id)
 
         if not lesson:
             return {"error": "Lesson not found"}, 404
@@ -275,18 +277,22 @@ class AsyncTokenManager:
         return False
 
     async def cleanup_expired(self):
-        """Periodically clean up expired tokens"""
+        """Periodically clean up expired tokens from database"""
+        from database import SessionLocal
+        from db_managers import auth_manager
+
         while True:
             await asyncio.sleep(3600)  # Run every hour
-            now = datetime.utcnow()
-            expired = [
-                token for token, data in self.tokens.items()
-                if now - data['created_at'] > self.ttl
-            ]
-            for token in expired:
-                del self.tokens[token]
-            if expired:
-                logger.info(f"Cleaned up {len(expired)} expired tokens")
+            try:
+                db = SessionLocal()
+                try:
+                    deleted_count = auth_manager.cleanup_expired_tokens(db)
+                    if deleted_count > 0:
+                        logger.info(f"Cleaned up {deleted_count} expired tokens from database")
+                finally:
+                    db.close()
+            except Exception as e:
+                logger.error(f"Error cleaning up expired tokens: {e}")
 
 # Global token manager instance
 token_manager = AsyncTokenManager(ttl_hours=24)
@@ -296,40 +302,21 @@ async def register_user_async(username: str, password: str):
     return auth.register_user(username, password)
 
 async def login_user_async(username: str, password: str):
-    """Async login with new token manager"""
+    """Async login using database auth"""
     try:
-        # Use blocking auth check
-        user = auth._get_user(username)
-
-        if not user:
-            return {"error": "User not found"}, 404
-
-        import hashlib
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-
-        if user.get('password_hash') != password_hash:
-            return {"error": "Invalid password"}, 401
-
-        # Create token with TTL
-        token = await token_manager.create_token(user['id'])
-
-        return {
-            "success": True,
-            "token": token,
-            "user_id": user['id']
-        }, 200
+        # Use the refactored login_user function which handles database
+        result, status = auth.login_user(username, password)
+        return result, status
 
     except Exception as e:
         logger.error(f"Error in login: {str(e)}")
         return {"error": f"Login error: {str(e)}"}, 500
 
 async def logout_user_async(token: str):
-    """Async logout using token manager"""
+    """Async logout using database"""
     try:
-        if token_manager.invalidate_token(token):
-            return {"success": True, "message": "Logged out successfully"}, 200
-        else:
-            return {"error": "Invalid token"}, 401
+        # Use the refactored logout_user function which handles database
+        return auth.logout_user(token)
     except Exception as e:
         logger.error(f"Error in logout: {str(e)}")
         return {"error": f"Logout error: {str(e)}"}, 500
