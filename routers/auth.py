@@ -64,7 +64,10 @@ async def register(data: RegisterRequest):
         if status != 201:
             raise HTTPException(status_code=status, detail=result.get("error", "Registration failed"))
 
-        return result
+        return {
+            "success": result["success"],
+            "user_id": str(result["user_id"])
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -80,7 +83,11 @@ async def login(data: LoginRequest):
         if status != 200:
             raise HTTPException(status_code=status, detail=result.get("error", "Login failed"))
 
-        return result
+        return {
+            "success": result["success"],
+            "token": result["token"],
+            "user_id": str(result["user_id"])
+        }
     except HTTPException:
         raise
     except Exception as e:
