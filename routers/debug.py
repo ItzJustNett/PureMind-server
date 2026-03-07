@@ -4,6 +4,8 @@ Debug API routes (FastAPI version)
 from fastapi import APIRouter, HTTPException
 import logging
 import lessons_manager
+from database import SessionLocal
+from db_managers import lesson_manager as db_lesson_manager
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/debug", tags=["debug"])
@@ -12,7 +14,12 @@ router = APIRouter(prefix="/api/debug", tags=["debug"])
 async def debug_overview():
     """Get overview of all lessons and courses"""
     try:
-        lessons = lessons_manager.lessons_data
+        db = SessionLocal()
+        try:
+            lessons_list = db_lesson_manager.list_lessons(db)
+            lessons = {lesson['lesson_id']: lesson for lesson in lessons_list}
+        finally:
+            db.close()
 
         courses = {}
         for lesson_id, lesson in lessons.items():
@@ -38,7 +45,11 @@ async def debug_overview():
 async def debug_lesson(lesson_id: str):
     """Get detailed debug info about a specific lesson"""
     try:
-        lesson = lessons_manager.lessons_data.get(lesson_id)
+        db = SessionLocal()
+        try:
+            lesson = db_lesson_manager.get_lesson(db, lesson_id)
+        finally:
+            db.close()
 
         if not lesson:
             raise HTTPException(status_code=404, detail="Lesson not found")
@@ -71,12 +82,16 @@ async def debug_lesson(lesson_id: str):
 async def debug_course(course_id: str):
     """Get detailed debug info about a specific course"""
     try:
-        lessons = lessons_manager.lessons_data
-        course_lessons = [
-            {'id': lid, 'title': lesson.get('title', 'Unknown')}
-            for lid, lesson in lessons.items()
-            if lesson.get('course_id') == course_id
-        ]
+        db = SessionLocal()
+        try:
+            lessons_list = db_lesson_manager.get_course_lessons(db, course_id)
+            lessons = {lesson['lesson_id']: lesson for lesson in lessons_list}
+            course_lessons = [
+                {'id': lesson['lesson_id'], 'title': lesson.get('title', 'Unknown')}
+                for lesson in lessons_list
+            ]
+        finally:
+            db.close()
 
         if not course_lessons:
             raise HTTPException(status_code=404, detail="Course not found")
