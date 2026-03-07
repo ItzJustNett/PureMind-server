@@ -4,7 +4,7 @@ Replaces in-memory active_tokens storage.
 """
 import secrets
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
@@ -107,6 +107,3 @@ def cleanup_expired_tokens(db: Session) -> int:
         db.rollback()
         logger.error(f"Error cleaning up expired tokens: {e}")
         return 0
-
-
-from typing import Tuple
