@@ -26,7 +26,7 @@ if not OPENROUTER_API_KEY:
 
 # OpenRouter API configuration
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = "mistralai/mistral-7b-instruct:free"
+OPENROUTER_MODEL = "google/gemini-3.1-flash-lite-preview"
 OPENROUTER_HEADERS = {
     "Authorization": f"Bearer {OPENROUTER_API_KEY}",
     "Content-Type": "application/json"
