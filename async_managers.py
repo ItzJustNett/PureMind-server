@@ -58,36 +58,20 @@ async def generate_lesson_test_async(lesson_id: str):
         if not youtube_link:
             return {"error": "No YouTube link available"}, 404
 
-        prompt = f"""
-        Create a test with 10 questions about the lesson titled "{title}".
-        This lesson is part of the course "{course_id}" and has this YouTube video: {youtube_link}.
+        prompt = f"""You must return ONLY valid JSON with no other text.
 
-        For each question:
-        1. Provide a question text
-        2. Provide exactly 4 answer options (A, B, C, D)
-        3. Indicate which answer is correct
-        4. Write the test in Ukrainian language
+Create a test with 10 questions about the lesson titled "{title}".
+Write the test in Ukrainian language.
 
-        Return the test in a structured JSON format that looks exactly like this:
-        {{
-          "lesson_id": "{lesson_id}",
-          "title": "{title}",
-          "questions": [
-            {{
-              "question": "Question text here",
-              "options": [
-                "Answer option A",
-                "Answer option B",
-                "Answer option C",
-                "Answer option D"
-              ],
-              "correct_answer": 0
-            }}
-          ]
-        }}
+Return ONLY this exact JSON format (no markdown, no extra text):
+{{"lesson_id": "{lesson_id}", "title": "{title}", "questions": [{{"question": "Q1 in Ukrainian?", "options": ["Option A", "Option B", "Option C", "Option D"], "correct_answer": 0}}]}}
 
-        Make sure the response is valid JSON.
-        """
+Each question should have:
+- "question": question text in Ukrainian
+- "options": array of exactly 4 string options
+- "correct_answer": index (0-3) of the correct option
+
+Return ONLY the JSON, starting with {{ and ending with }}"""
 
         logger.info(f"Sending async request to OpenRouter for test: {title}")
 
@@ -122,25 +106,20 @@ async def generate_lesson_test_async(lesson_id: str):
         if json_match_start != -1 and json_match_end != -1:
             json_str = test_content[json_match_start:json_match_end+1]
 
-            # Clean up control characters and invalid escape sequences
-            json_str = json_str.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+            # Clean up control characters
+            import re
+            # Remove actual control characters (but keep escaped ones)
+            json_str = re.sub(r'[\x00-\x1f\x7f]', '', json_str)
 
             try:
                 test_json = json.loads(json_str)
                 return test_json, 200
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse JSON after cleaning: {e}")
-                # Try one more time with stricter cleaning
-                import re
-                # Remove any control characters except escaped ones
-                json_str = re.sub(r'[\x00-\x1f]', '', json_str)
-                try:
-                    test_json = json.loads(json_str)
-                    return test_json, 200
-                except json.JSONDecodeError:
-                    return {"error": f"Could not parse test JSON: {str(e)}", "raw": test_content[:500]}, 500
+                logger.error(f"Failed to parse JSON: {e}")
+                logger.error(f"JSON content (first 500 chars): {json_str[:500]}")
+                return {"error": f"Could not parse test JSON", "details": str(e), "sample": json_str[:200]}, 500
 
-        return {"error": "Could not parse test JSON"}, 500
+        return {"error": "Could not parse test JSON - no JSON structure found"}, 500
 
     except Exception as e:
         logger.error(f"Error generating test: {str(e)}")
