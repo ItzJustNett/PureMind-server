@@ -150,19 +150,40 @@ def generate_lesson_test(lesson_id: str) -> Tuple[Dict, int]:
             json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', test_content)
             if json_match:
                 try:
-                    test_json = json.loads(json_match.group(1))
+                    json_str = json_match.group(1)
+                    # Clean up control characters
+                    json_str = json_str.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+                    json_str = re.sub(r'[\x00-\x1f]', '', json_str)
+                    test_json = json.loads(json_str)
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse extracted JSON: {e}")
                     return {
-                        "error": "Failed to parse test JSON", 
-                        "raw_content": test_content,
+                        "error": "Failed to parse test JSON",
+                        "raw_content": test_content[:500],
                         "parsing_error": str(e)
                     }, 500
             else:
-                return {
-                    "error": "Failed to parse test JSON - no JSON structure found", 
-                    "raw_content": test_content
-                }, 500
+                # Try extracting JSON from anywhere in the content
+                json_match_start = test_content.find('{')
+                json_match_end = test_content.rfind('}')
+                if json_match_start != -1 and json_match_end != -1:
+                    try:
+                        json_str = test_content[json_match_start:json_match_end+1]
+                        json_str = json_str.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+                        json_str = re.sub(r'[\x00-\x1f]', '', json_str)
+                        test_json = json.loads(json_str)
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse extracted JSON: {e}")
+                        return {
+                            "error": "Failed to parse test JSON",
+                            "raw_content": test_content[:500],
+                            "parsing_error": str(e)
+                        }, 500
+                else:
+                    return {
+                        "error": "Failed to parse test JSON - no JSON structure found",
+                        "raw_content": test_content[:500]
+                    }, 500
         
         # Validate the structure
         if not isinstance(test_json, dict) or "questions" not in test_json:

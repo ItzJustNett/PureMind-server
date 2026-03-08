@@ -121,8 +121,24 @@ async def generate_lesson_test_async(lesson_id: str):
 
         if json_match_start != -1 and json_match_end != -1:
             json_str = test_content[json_match_start:json_match_end+1]
-            test_json = json.loads(json_str)
-            return test_json, 200
+
+            # Clean up control characters and invalid escape sequences
+            json_str = json_str.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+
+            try:
+                test_json = json.loads(json_str)
+                return test_json, 200
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse JSON after cleaning: {e}")
+                # Try one more time with stricter cleaning
+                import re
+                # Remove any control characters except escaped ones
+                json_str = re.sub(r'[\x00-\x1f]', '', json_str)
+                try:
+                    test_json = json.loads(json_str)
+                    return test_json, 200
+                except json.JSONDecodeError:
+                    return {"error": f"Could not parse test JSON: {str(e)}", "raw": test_content[:500]}, 500
 
         return {"error": "Could not parse test JSON"}, 500
 
