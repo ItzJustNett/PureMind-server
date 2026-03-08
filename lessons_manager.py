@@ -26,7 +26,7 @@ if not OPENROUTER_API_KEY:
 
 # OpenRouter API configuration
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = "google/gemini-2.0-flash-lite-preview-02-05:free"  # Updated model
+OPENROUTER_MODEL = "meta-llama/llama-3.2-3b-instruct:free"
 OPENROUTER_HEADERS = {
     "Authorization": f"Bearer {OPENROUTER_API_KEY}",
     "Content-Type": "application/json"
