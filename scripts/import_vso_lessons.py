@@ -165,12 +165,12 @@ def verify_import(db):
 
 def main():
     """Main import function"""
-    # Get the VSO lessons file path
-    vso_lessons_path = Path(__file__).parent.parent.parent / "scraper" / "vso_lessons.json"
+    # Get the VSO lessons file path (in the API directory)
+    vso_lessons_path = Path(__file__).parent.parent / "vso_lessons.json"
 
     if not vso_lessons_path.exists():
         logger.error(f"VSO lessons file not found: {vso_lessons_path}")
-        logger.info("Please run the scraper first to generate vso_lessons.json")
+        logger.info("Expected location: API/vso_lessons.json")
         return False
 
     logger.info(f"Starting VSO lessons import from {vso_lessons_path}")
