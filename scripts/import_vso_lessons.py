@@ -13,6 +13,11 @@ from typing import Dict, List
 # Add parent directory to path to import API modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Load environment variables from parent directory BEFORE importing database modules
+from dotenv import load_dotenv
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
 from database import SessionLocal
 from database.models import Course, Lesson
 from db_managers import lesson_manager
