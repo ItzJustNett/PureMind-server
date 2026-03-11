@@ -39,7 +39,7 @@ class UserInfo(BaseModel):
     created_at: int
 
 # Dependency for token validation (using async token manager)
-async def get_current_user(authorization: str = Header(...)) -> dict:
+async def get_current_user(authorization: str = Header(None, alias="Authorization")) -> dict:
     """Extract and validate token from Authorization header"""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="No token provided")
