@@ -23,9 +23,9 @@ class OAuthCallbackRequest(BaseModel):
 
 @router.get("/{provider}/url")
 async def get_oauth_url(provider: str):
-    """Get OAuth authorization URL for a provider (discord or microsoft)"""
+    """Get OAuth authorization URL for a provider (discord, microsoft, or google)"""
     try:
-        if provider not in ["discord", "microsoft"]:
+        if provider not in ["discord", "microsoft", "google"]:
             raise HTTPException(status_code=400, detail="Invalid provider")
 
         url = await OAuthProvider.get_authorization_url(provider)
@@ -49,7 +49,7 @@ async def get_oauth_url(provider: str):
 async def oauth_callback(data: OAuthCallbackRequest):
     """Handle OAuth callback and login/register user"""
     try:
-        if data.provider not in ["discord", "microsoft"]:
+        if data.provider not in ["discord", "microsoft", "google"]:
             raise HTTPException(status_code=400, detail="Invalid provider")
 
         # Exchange code for token
