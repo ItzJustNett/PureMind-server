@@ -48,12 +48,14 @@ class OAuthProvider:
         elif provider == "microsoft":
             if not MICROSOFT_CLIENT_ID:
                 return None
+            # Use Microsoft Graph scopes format for personal accounts
+            scopes = "https://graph.microsoft.com/User.Read%20openid%20profile%20email"
             return (
                 f"{MICROSOFT_AUTH_URL}?"
                 f"client_id={MICROSOFT_CLIENT_ID}&"
                 f"redirect_uri={MICROSOFT_REDIRECT_URI}&"
                 f"response_type=code&"
-                f"scope=openid%20profile%20email"
+                f"scope={scopes}"
             )
 
         return None
