@@ -103,11 +103,18 @@ def migrate_users(db):
 def migrate_lessons(db):
     """Migrate lessons from JSON"""
     logger.info("Migrating lessons and courses...")
+
+    # Load both lesson files and merge them
     lessons_data = load_json_file("lessons.json")
+    vso_lessons_data = load_json_file("vso_lessons.json")
+
+    # Merge the two dictionaries
+    all_lessons = {**lessons_data, **vso_lessons_data}
+    logger.info(f"Total lessons to migrate: {len(all_lessons)}")
 
     # First, collect all unique courses
     courses_dict = {}
-    for lesson_id, lesson in lessons_data.items():
+    for lesson_id, lesson in all_lessons.items():
         course_id = lesson.get("course_id", "unknown")
         if course_id and course_id not in courses_dict:
             courses_dict[course_id] = {
@@ -135,7 +142,7 @@ def migrate_lessons(db):
 
     # Create lessons
     migrated_count = 0
-    for lesson_id, lesson in lessons_data.items():
+    for lesson_id, lesson in all_lessons.items():
         try:
             # Check if lesson already exists
             existing = db.query(Lesson).filter(Lesson.lesson_id == lesson_id).first()

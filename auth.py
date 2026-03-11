@@ -42,6 +42,21 @@ def login_user(username: str, password: str) -> Tuple[Dict, int]:
         db.close()
 
 
+def login_by_user_id(user_id: int) -> Tuple[Dict, int]:
+    """Login a user by ID (for OAuth) and generate a token"""
+    db = SessionLocal()
+    try:
+        # Get user to verify they exist
+        user_data = user_manager.get_user_by_id(db, user_id)
+        if not user_data:
+            return {"error": "User not found"}, 404
+
+        # Create token
+        return auth_manager.create_token(db, user_id)
+    finally:
+        db.close()
+
+
 def logout_user(token: str) -> Tuple[Dict, int]:
     """Logout a user by invalidating their token"""
     db = SessionLocal()

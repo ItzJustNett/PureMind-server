@@ -11,10 +11,44 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])
 
 @router.get("")
-async def list_lessons():
-    """List all lessons"""
+async def list_lessons(
+    sort_by: str = Query(None, description="Sort by: title, xp, or recent"),
+    grade: str = Query(None, description="Filter by grade"),
+    subject: str = Query(None, description="Filter by subject (course)"),
+    difficulty: str = Query(None, description="Filter by difficulty")
+):
+    """List all lessons with optional sorting and filtering"""
     try:
         simplified_list = await async_managers.list_lessons_async()
+
+        # Filter by grade (from course_id ending like "-10")
+        if grade:
+            simplified_list = [
+                lesson for lesson in simplified_list
+                if lesson.get('course_id', '').endswith(f'-{grade}')
+            ]
+
+        # Filter by subject (course prefix like "biolohiya-i-ekolohiya")
+        if subject:
+            simplified_list = [
+                lesson for lesson in simplified_list
+                if lesson.get('course_id', '').startswith(subject)
+            ]
+
+        # Filter by difficulty
+        if difficulty:
+            simplified_list = [
+                lesson for lesson in simplified_list
+                if lesson.get('difficulty') == difficulty
+            ]
+
+        # Sort lessons
+        if sort_by == "title":
+            simplified_list.sort(key=lambda x: x.get('title', ''))
+        elif sort_by == "xp":
+            simplified_list.sort(key=lambda x: x.get('xp_reward', 0), reverse=True)
+        # "recent" or None keeps original order
+
         return {"count": len(simplified_list), "lessons": simplified_list}
     except Exception as e:
         logger.error(f"Error listing lessons: {str(e)}")

@@ -18,6 +18,11 @@ class ProfileRequest(BaseModel):
     about: Optional[str] = None
     cat_id: Optional[int] = 0
     illness_id: Optional[int] = 0
+    grade: Optional[int] = None
+
+class SetupRequest(BaseModel):
+    grade: int  # User's grade/class (6-11)
+    cat_id: int  # User's cat selection (0, 1, 2)
 
 class ExerciseCheckRequest(BaseModel):
     correct_answers: int
@@ -27,6 +32,16 @@ class BuyItemRequest(BaseModel):
 
 class EquipItemRequest(BaseModel):
     item_id: str
+
+class UpdateEmailRequest(BaseModel):
+    email: str
+
+class UpdateUsernameRequest(BaseModel):
+    username: str
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
 
 # Endpoints
 @router.get("/profiles/me")
@@ -65,6 +80,32 @@ async def get_profile(user_id: str):
     except Exception as e:
         logger.error(f"Error getting profile: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error getting profile: {str(e)}")
+
+@router.post("/profiles/setup")
+async def complete_setup(data: SetupRequest, user: dict = Depends(get_current_user)):
+    """Complete initial setup by setting user's grade and cat"""
+    try:
+        if data.grade < 6 or data.grade > 11:
+            raise HTTPException(status_code=400, detail="Grade must be between 6 and 11")
+
+        if data.cat_id not in [0, 1, 2]:
+            raise HTTPException(status_code=400, detail="Cat ID must be 0, 1, or 2")
+
+        profile_data = {
+            "grade": data.grade,
+            "cat_id": data.cat_id
+        }
+        result, status = profiles.create_or_update_profile(user["user_id"], profile_data)
+
+        if status != 200:
+            raise HTTPException(status_code=status, detail=result.get("error", "Failed to complete setup"))
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error completing setup: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error completing setup: {str(e)}")
 
 @router.post("/profiles")
 async def create_or_update_profile(data: ProfileRequest, user: dict = Depends(get_current_user)):
@@ -244,3 +285,90 @@ async def unequip_item(data: EquipItemRequest, user: dict = Depends(get_current_
     except Exception as e:
         logger.error(f"Error unequipping item: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error unequipping item: {str(e)}")
+
+# Account Settings endpoints
+@router.put("/account/email")
+async def update_email(data: UpdateEmailRequest, user: dict = Depends(get_current_user)):
+    """Update user's email"""
+    try:
+        from database import SessionLocal
+        from database.models import User
+
+        db = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.id == int(user["user_id"])).first()
+            if not db_user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            db_user.email = data.email
+            db.commit()
+
+            return {"success": True, "message": "Email updated successfully"}
+        finally:
+            db.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating email: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating email: {str(e)}")
+
+@router.put("/account/username")
+async def update_username(data: UpdateUsernameRequest, user: dict = Depends(get_current_user)):
+    """Update user's username"""
+    try:
+        from database import SessionLocal
+        from database.models import User
+
+        db = SessionLocal()
+        try:
+            # Check if username is taken
+            existing = db.query(User).filter(User.username == data.username).first()
+            if existing and existing.id != int(user["user_id"]):
+                raise HTTPException(status_code=400, detail="Username already taken")
+
+            db_user = db.query(User).filter(User.id == int(user["user_id"])).first()
+            if not db_user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            db_user.username = data.username
+            db.commit()
+
+            return {"success": True, "message": "Username updated successfully"}
+        finally:
+            db.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating username: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating username: {str(e)}")
+
+@router.put("/account/password")
+async def update_password(data: UpdatePasswordRequest, user: dict = Depends(get_current_user)):
+    """Update user's password"""
+    try:
+        import auth
+        from database import SessionLocal
+        from database.models import User
+
+        db = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.id == int(user["user_id"])).first()
+            if not db_user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            # Verify current password
+            if not auth.verify_password(data.current_password, db_user.password_hash):
+                raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+            # Update to new password
+            db_user.password_hash = auth.hash_password(data.new_password)
+            db.commit()
+
+            return {"success": True, "message": "Password updated successfully"}
+        finally:
+            db.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating password: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating password: {str(e)}")

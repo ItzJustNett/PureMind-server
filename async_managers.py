@@ -307,6 +307,17 @@ async def login_user_async(username: str, password: str):
         logger.error(f"Error in login: {str(e)}")
         return {"error": f"Login error: {str(e)}"}, 500
 
+
+async def login_user_by_id_async(user_id: str):
+    """Async login by user ID (for OAuth)"""
+    try:
+        result, status = auth.login_by_user_id(int(user_id))
+        return result, status
+
+    except Exception as e:
+        logger.error(f"Error in login by ID: {str(e)}")
+        return {"error": f"Login error: {str(e)}"}, 500
+
 async def logout_user_async(token: str):
     """Async logout using database"""
     try:

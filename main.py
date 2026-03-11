@@ -74,7 +74,7 @@ app.add_middleware(
 )
 
 # Import routers
-from routers import lessons, auth, profiles, speech, debug
+from routers import lessons, auth, profiles, speech, debug, oauth
 
 # Exception handler for HTTPException to ensure CORS headers are included
 from fastapi import HTTPException
@@ -91,6 +91,7 @@ async def http_exception_handler(request, exc):
 # Include routers
 app.include_router(lessons.router)
 app.include_router(auth.router)
+app.include_router(oauth.router)
 app.include_router(profiles.router)
 app.include_router(speech.router)
 app.include_router(debug.router)

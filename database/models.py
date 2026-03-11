@@ -42,6 +42,7 @@ class Profile(Base):
     about = Column(Text, nullable=True, default="")
     cat_id = Column(Integer, nullable=False, default=0)
     illness_id = Column(Integer, nullable=False, default=0)
+    grade = Column(Integer, nullable=True)  # User's grade/class (6-11)
 
     # Gamification fields
     xp = Column(Integer, nullable=False, default=0)
@@ -57,7 +58,7 @@ class Profile(Base):
 
     # Constraints
     __table_args__ = (
-        CheckConstraint("cat_id IN (0, 1, 10)", name="valid_cat_id"),
+        CheckConstraint("cat_id IN (0, 1, 2)", name="valid_cat_id"),
         CheckConstraint("illness_id BETWEEN 0 AND 5", name="valid_illness_id"),
         CheckConstraint("xp >= 0", name="non_negative_xp"),
         CheckConstraint("meowcoins >= 0", name="non_negative_meowcoins"),
