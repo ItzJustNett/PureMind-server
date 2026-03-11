@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from database import SessionLocal
+from sqlalchemy import text
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -20,10 +21,10 @@ def main():
         # Add grade column if it doesn't exist
         logger.info("Adding grade column to profiles table...")
 
-        db.execute("""
+        db.execute(text("""
             ALTER TABLE profiles
             ADD COLUMN IF NOT EXISTS grade INTEGER;
-        """)
+        """))
 
         db.commit()
         logger.info("✓ Grade column added successfully!")
