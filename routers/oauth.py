@@ -10,6 +10,7 @@ import async_managers
 from oauth_providers import OAuthProvider
 from database import SessionLocal
 from database.models import User, Profile
+from db_managers import user_manager
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/oauth", tags=["oauth"])
@@ -94,7 +95,7 @@ async def oauth_callback(data: OAuthCallbackRequest):
                 # Create user with a random password (they'll use OAuth to login)
                 import secrets
                 random_password = secrets.token_urlsafe(32)
-                password_hash = auth.hash_password(random_password)
+                password_hash = user_manager.hash_password(random_password)
 
                 new_user = User(
                     username=username,
