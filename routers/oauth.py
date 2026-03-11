@@ -79,6 +79,7 @@ async def oauth_callback(data: OAuthCallbackRequest):
             if existing_user:
                 # User exists, log them in
                 user_id = existing_user.id
+                username = existing_user.username
                 logger.info(f"Existing user logged in via {data.provider}: {email}")
 
             else:
@@ -107,6 +108,7 @@ async def oauth_callback(data: OAuthCallbackRequest):
                 db.refresh(new_user)
 
                 user_id = new_user.id
+                # username is already set above
 
                 # Create default profile
                 profile = Profile(
@@ -129,6 +131,7 @@ async def oauth_callback(data: OAuthCallbackRequest):
                 "success": True,
                 "token": result["token"],
                 "user_id": str(user_id),
+                "username": username,
                 "is_new_user": not existing_user
             }
 
