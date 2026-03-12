@@ -82,13 +82,27 @@ async def complete_setup(data: SetupRequest, user: dict = Depends(get_current_us
         if data.cat_id not in [0, 1, 2]:
             raise HTTPException(status_code=400, detail="Cat ID must be 0, 1, or 2")
 
-        profile_data = {
-            "grade": data.grade,
-            "cat_id": data.cat_id
-        }
-        result, status = profiles.create_or_update_profile(user["user_id"], profile_data)
+        # Get user info for default name
+        user_info = await async_managers.get_user_by_id_async(user["user_id"])
+        default_name = user_info.get("username", "User") if user_info else "User"
 
-        if status != 200:
+        # Create profile with defaults for name and about
+        from database import SessionLocal
+        from db_managers import profile_manager
+        db = SessionLocal()
+        try:
+            result, status = profile_manager.create_or_update_profile(
+                db,
+                int(user["user_id"]),
+                default_name,
+                "",
+                data.cat_id,
+                0
+            )
+        finally:
+            db.close()
+
+        if status not in [200, 201]:
             raise HTTPException(status_code=status, detail=result.get("error", "Failed to complete setup"))
 
         return result
@@ -102,10 +116,23 @@ async def complete_setup(data: SetupRequest, user: dict = Depends(get_current_us
 async def create_or_update_profile(data: ProfileRequest, user: dict = Depends(get_current_user)):
     """Create or update current user's profile"""
     try:
-        profile_data = data.dict()
-        result, status = profiles.create_or_update_profile(user["user_id"], profile_data)
+        from database import SessionLocal
+        from db_managers import profile_manager
 
-        if status != 200:
+        db = SessionLocal()
+        try:
+            result, status = profile_manager.create_or_update_profile(
+                db,
+                int(user["user_id"]),
+                data.name,
+                data.about or "",
+                data.cat_id or 0,
+                data.illness_id or 0
+            )
+        finally:
+            db.close()
+
+        if status not in [200, 201]:
             raise HTTPException(status_code=status, detail=result.get("error", "Failed to save profile"))
 
         return result
@@ -119,10 +146,23 @@ async def create_or_update_profile(data: ProfileRequest, user: dict = Depends(ge
 async def update_profile(data: ProfileRequest, user: dict = Depends(get_current_user)):
     """Update current user's profile (PUT alternative)"""
     try:
-        profile_data = data.dict()
-        result, status = profiles.create_or_update_profile(user["user_id"], profile_data)
+        from database import SessionLocal
+        from db_managers import profile_manager
 
-        if status != 200:
+        db = SessionLocal()
+        try:
+            result, status = profile_manager.create_or_update_profile(
+                db,
+                int(user["user_id"]),
+                data.name,
+                data.about or "",
+                data.cat_id or 0,
+                data.illness_id or 0
+            )
+        finally:
+            db.close()
+
+        if status not in [200, 201]:
             raise HTTPException(status_code=status, detail=result.get("error", "Failed to save profile"))
 
         return result
