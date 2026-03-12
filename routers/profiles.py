@@ -97,7 +97,8 @@ async def complete_setup(data: SetupRequest, user: dict = Depends(get_current_us
                 default_name,
                 "",
                 data.cat_id,
-                0
+                0,
+                data.grade
             )
         finally:
             db.close()

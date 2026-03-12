@@ -38,7 +38,8 @@ def create_or_update_profile(
     name: str,
     about: str,
     cat_id: int,
-    illness_id: int = 0
+    illness_id: int = 0,
+    grade: int = None
 ) -> Tuple[Dict, int]:
     """Create or update a user profile"""
     try:
@@ -52,6 +53,12 @@ def create_or_update_profile(
         if illness_id not in ILLNESSES:
             return {
                 "error": f"Invalid illness_id. Must be one of {list(ILLNESSES.keys())}"
+            }, 400
+
+        # Validate grade if provided
+        if grade is not None and (grade < 6 or grade > 11):
+            return {
+                "error": "Invalid grade. Must be between 6 and 11"
             }, 400
 
         # Check if user exists
@@ -71,6 +78,8 @@ def create_or_update_profile(
         profile.about = about
         profile.cat_id = cat_id
         profile.illness_id = illness_id
+        if grade is not None:
+            profile.grade = grade
 
         if is_new:
             db.add(profile)
@@ -283,6 +292,11 @@ def update_streak(db: Session, user_id: int) -> Dict:
 
 def profile_to_dict(profile: Profile) -> Dict:
     """Convert profile object to dictionary"""
+    # Calculate level based on XP (every 1000 XP = 1 level)
+    level = (profile.xp // 1000) + 1
+    # Calculate XP needed for next level
+    max_xp = level * 1000
+
     return {
         "user_id": profile.user_id,
         "name": profile.name,
@@ -291,7 +305,10 @@ def profile_to_dict(profile: Profile) -> Dict:
         "illness_id": profile.illness_id,
         "illness_name": ILLNESSES.get(profile.illness_id, "Unknown"),
         "illness_name_ua": ILLNESSES_UA.get(profile.illness_id, "Невідомо"),
+        "grade": profile.grade,
+        "level": level,
         "xp": profile.xp,
+        "max_xp": max_xp,
         "meowcoins": profile.meowcoins,
         "current_streak": profile.current_streak,
         "longest_streak": profile.longest_streak,
