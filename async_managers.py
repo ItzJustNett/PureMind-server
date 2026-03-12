@@ -42,13 +42,18 @@ async def list_lessons_async():
 async def generate_lesson_test_async(lesson_id: str):
     """Generate test using async httpx instead of blocking requests"""
     try:
+        logger.info(f"[TEST GEN] Starting test generation for lesson: {lesson_id}")
+
         # Use blocking get_lesson to retrieve from database
         lesson = lessons_manager.get_lesson(lesson_id)
+        logger.info(f"[TEST GEN] Lesson retrieved: {bool(lesson)}")
 
         if not lesson:
+            logger.error(f"[TEST GEN] Lesson not found: {lesson_id}")
             return {"error": "Lesson not found"}, 404
 
         if not lessons_manager.OPENROUTER_API_KEY:
+            logger.error("[TEST GEN] OpenRouter API key not configured")
             return {"error": "OpenRouter API key not configured"}, 500
 
         title = lesson.get('title', '')
@@ -73,7 +78,8 @@ Each question should have:
 
 Return ONLY the JSON, starting with {{ and ending with }}"""
 
-        logger.info(f"Sending async request to OpenRouter for test: {title}")
+        logger.info(f"[TEST GEN] Sending async request to OpenRouter for test: {title}")
+        logger.debug(f"[TEST GEN] Using model: {lessons_manager.OPENROUTER_MODEL}")
 
         # Use httpx for async HTTP
         async with httpx.AsyncClient(timeout=45.0) as client:
@@ -89,12 +95,16 @@ Return ONLY the JSON, starting with {{ and ending with }}"""
                 }
             )
 
+        logger.info(f"[TEST GEN] OpenRouter response status: {response.status_code}")
+
         if response.status_code != 200:
-            logger.error(f"OpenRouter API error: {response.text}")
+            logger.error(f"[TEST GEN] OpenRouter API error: {response.text[:500]}")
             return {"error": f"OpenRouter API error: {response.status_code}"}, 500
 
         result = response.json()
+        logger.info(f"[TEST GEN] Response parsed, checking for content...")
         test_content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        logger.info(f"[TEST GEN] Test content length: {len(test_content) if test_content else 0}")
 
         if not test_content:
             return {"error": "Failed to generate test"}, 500
@@ -119,10 +129,11 @@ Return ONLY the JSON, starting with {{ and ending with }}"""
                 logger.error(f"JSON content (first 500 chars): {json_str[:500]}")
                 return {"error": f"Could not parse test JSON", "details": str(e), "sample": json_str[:200]}, 500
 
+        logger.error("[TEST GEN] Could not parse test JSON - no JSON structure found")
         return {"error": "Could not parse test JSON - no JSON structure found"}, 500
 
     except Exception as e:
-        logger.error(f"Error generating test: {str(e)}")
+        logger.error(f"[TEST GEN] Error generating test: {str(e)}", exc_info=True)
         return {"error": f"Error: {str(e)}"}, 500
 
 async def generate_conspect_async(lesson_id: str):

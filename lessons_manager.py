@@ -215,7 +215,13 @@ def get_lesson(lesson_id: str) -> Optional[Dict]:
     """Get a specific lesson by ID"""
     db = SessionLocal()
     try:
-        return db_lesson_manager.get_lesson(db, lesson_id)
+        logger.debug(f"[GET LESSON] Fetching lesson from DB: {lesson_id}")
+        lesson = db_lesson_manager.get_lesson(db, lesson_id)
+        logger.debug(f"[GET LESSON] Found: {bool(lesson)}")
+        return lesson
+    except Exception as e:
+        logger.error(f"[GET LESSON] Error fetching lesson {lesson_id}: {e}", exc_info=True)
+        return None
     finally:
         db.close()
 

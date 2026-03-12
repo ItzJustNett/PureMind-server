@@ -122,14 +122,17 @@ async def get_video_url(lesson_id: str):
 async def generate_lesson_test(lesson_id: str):
     """Generate a test for a specific lesson (async with httpx)"""
     try:
+        logger.info(f"Generating test for lesson: {lesson_id}")
         result, status = await async_managers.generate_lesson_test_async(lesson_id)
+        logger.info(f"Test generation result: status={status}, has_error={'error' in result}")
         if status != 200:
+            logger.error(f"Test generation failed: {result.get('error', 'Unknown error')}")
             raise HTTPException(status_code=status, detail=result.get("error", "Error generating test"))
         return result
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error generating test: {str(e)}")
+        logger.error(f"Error generating test for {lesson_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error generating test: {str(e)}")
 
 @router.get("/{lesson_id}/conspect")
