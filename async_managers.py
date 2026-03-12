@@ -329,7 +329,7 @@ async def logout_user_async(token: str):
 
 async def validate_token_async(token: str):
     """Async token validation"""
-    return token_manager.validate_token(token)
+    return auth.validate_token(token)
 
 async def get_user_by_id_async(user_id: str):
     """Async wrapper for get_user_by_id"""
