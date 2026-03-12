@@ -310,6 +310,8 @@ def profile_to_dict(profile: Profile) -> Dict:
         "xp": profile.xp,
         "max_xp": max_xp,
         "meowcoins": profile.meowcoins,
+        "tests_completed": getattr(profile, 'tests_completed', 0),
+        "lessons_completed": getattr(profile, 'lessons_completed', 0),
         "current_streak": profile.current_streak,
         "longest_streak": profile.longest_streak,
         "last_activity_date": profile.last_activity_date.isoformat() if profile.last_activity_date else None,

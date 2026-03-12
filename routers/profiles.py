@@ -74,22 +74,11 @@ async def get_my_stats(user: dict = Depends(get_current_user)):
             if not profile:
                 raise HTTPException(status_code=404, detail="Profile not found")
 
-            # Count completed exercises (actual exercises, not tests)
-            exercises_completed = db.query(func.count(distinct(CompletedExercise.exercise_id))).filter(
-                CompletedExercise.user_id == int(user["user_id"])
-            ).scalar() or 0
-
-            # Estimate tests completed based on XP earned (rough estimate: 20 XP per test on average)
-            # This is temporary until we have proper test completion tracking
-            estimated_tests = max(0, int(profile.xp / 15)) if profile.xp > 0 else 0
-
-            # Lessons completed = exercises completed + estimated tests
-            lessons_completed = exercises_completed + estimated_tests
-
+            # Use the actual tracked values from profile
             return {
                 "streak": profile.current_streak or 0,
-                "lessons_completed": lessons_completed,
-                "tests_completed": estimated_tests
+                "lessons_completed": profile.lessons_completed or 0,
+                "tests_completed": profile.tests_completed or 0
             }
         finally:
             db.close()

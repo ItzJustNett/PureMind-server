@@ -199,6 +199,7 @@ async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends
 
             profile.meowcoins += meowcoins_earned
             profile.xp += xp_earned
+            profile.tests_completed += 1
             db.commit()
 
             # Update streak

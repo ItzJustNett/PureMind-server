@@ -48,6 +48,10 @@ class Profile(Base):
     xp = Column(Integer, nullable=False, default=0)
     meowcoins = Column(Integer, nullable=False, default=0)
 
+    # Progress tracking
+    tests_completed = Column(Integer, nullable=False, default=0)
+    lessons_completed = Column(Integer, nullable=False, default=0)
+
     # Streak tracking
     current_streak = Column(Integer, nullable=False, default=0)
     longest_streak = Column(Integer, nullable=False, default=0)
@@ -62,6 +66,8 @@ class Profile(Base):
         CheckConstraint("illness_id BETWEEN 0 AND 5", name="valid_illness_id"),
         CheckConstraint("xp >= 0", name="non_negative_xp"),
         CheckConstraint("meowcoins >= 0", name="non_negative_meowcoins"),
+        CheckConstraint("tests_completed >= 0", name="non_negative_tests"),
+        CheckConstraint("lessons_completed >= 0", name="non_negative_lessons"),
         CheckConstraint("current_streak >= 0", name="non_negative_current_streak"),
         CheckConstraint("longest_streak >= 0", name="non_negative_longest_streak"),
         Index("idx_profile_xp", "xp"),
