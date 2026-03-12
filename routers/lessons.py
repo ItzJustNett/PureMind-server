@@ -12,6 +12,11 @@ from routers.auth import get_current_user
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])
 
+# Request models
+class TestSubmission(BaseModel):
+    score: int
+    total_questions: int
+
 @router.get("")
 async def list_lessons(
     sort_by: str = Query(None, description="Sort by: title, xp, or recent"),
@@ -164,10 +169,6 @@ async def add_lesson(lesson_data: dict):
     except Exception as e:
         logger.error(f"Error adding lesson: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error adding lesson: {str(e)}")
-
-class TestSubmission(BaseModel):
-    score: int
-    total_questions: int
 
 @router.post("/{lesson_id}/test/submit")
 async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends(get_current_user)):
