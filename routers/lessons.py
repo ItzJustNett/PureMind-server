@@ -1,11 +1,13 @@
 """
 Lessons API routes (FastAPI version with async optimization)
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from pydantic import BaseModel
 import json
 import logging
 import lessons_manager
 import async_managers
+from routers.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])
@@ -162,6 +164,62 @@ async def add_lesson(lesson_data: dict):
     except Exception as e:
         logger.error(f"Error adding lesson: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error adding lesson: {str(e)}")
+
+class TestSubmission(BaseModel):
+    score: int
+    total_questions: int
+
+@router.post("/{lesson_id}/test/submit")
+async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends(get_current_user)):
+    """Submit test results and award meowcoins"""
+    try:
+        from database import SessionLocal
+        from database.models import Profile
+
+        if data.score < 0 or data.total_questions <= 0:
+            raise HTTPException(status_code=400, detail="Invalid score or total_questions")
+
+        # Calculate rewards based on score
+        # 100% = 20 meowcoins, 90% = 18, etc.
+        percentage = (data.score / data.total_questions) * 100
+        meowcoins_earned = int((percentage / 100) * 20)
+        xp_earned = int((percentage / 100) * 20)
+
+        # Award meowcoins and XP to user
+        db = SessionLocal()
+        try:
+            profile = db.query(Profile).filter(Profile.user_id == int(user["user_id"])).first()
+
+            if not profile:
+                raise HTTPException(status_code=404, detail="Profile not found")
+
+            profile.meowcoins += meowcoins_earned
+            profile.xp += xp_earned
+            db.commit()
+
+            # Update streak
+            from db_managers import profile_manager
+            profile_manager.update_streak(db, int(user["user_id"]))
+
+            logger.info(f"Test {lesson_id} completed by user {user['user_id']}, earned {meowcoins_earned} meowcoins")
+
+            return {
+                "success": True,
+                "score": data.score,
+                "total_questions": data.total_questions,
+                "percentage": round(percentage, 1),
+                "meowcoins_earned": meowcoins_earned,
+                "xp_earned": xp_earned,
+                "total_meowcoins": profile.meowcoins,
+                "total_xp": profile.xp
+            }
+        finally:
+            db.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error submitting test: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error submitting test: {str(e)}")
 
 @router.get("/test-openrouter")
 async def test_openrouter():
