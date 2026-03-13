@@ -92,7 +92,7 @@ def check_exercise_answers(user_id: int, exercise_id: int, correct_answers: int)
         db.close()
 
 
-def get_store_items() -> Dict:
+def get_store_items() -> List[Dict]:
     """Get the list of items available in the store"""
     db = SessionLocal()
     try:

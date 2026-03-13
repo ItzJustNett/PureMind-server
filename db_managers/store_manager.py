@@ -12,21 +12,23 @@ from db_managers.profile_manager import update_streak
 logger = logging.getLogger(__name__)
 
 
-def get_store_items(db: Session) -> Dict:
+def get_store_items(db: Session) -> List[Dict]:
     """Get all store items"""
     try:
         items = db.query(StoreItem).all()
-        return {
-            item.item_id: {
+        return [
+            {
+                "id": str(item.id),
+                "item_id": item.item_id,
+                "name": item.name,
                 "price": item.price,
-                "description": item.description,
-                "name": item.name
+                "description": item.description
             }
             for item in items
-        }
+        ]
     except Exception as e:
         logger.error(f"Error getting store items: {e}")
-        return {}
+        return []
 
 
 def buy_item(db: Session, user_id: int, item_id: str) -> Tuple[Dict, int]:
