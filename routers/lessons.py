@@ -119,15 +119,49 @@ async def get_video_url(lesson_id: str):
         raise HTTPException(status_code=500, detail=f"Error getting video URL: {str(e)}")
 
 @router.get("/{lesson_id}/test")
-async def generate_lesson_test(lesson_id: str):
-    """Generate a test for a specific lesson (async with httpx)"""
+async def generate_lesson_test(lesson_id: str, user: dict = Depends(get_current_user)):
+    """Generate a test for a specific lesson (async with httpx) and save to user profile"""
     try:
+        from database import SessionLocal
+        from database.models import GeneratedTest, Lesson
+
         logger.info(f"Generating test for lesson: {lesson_id}")
         result, status = await async_managers.generate_lesson_test_async(lesson_id)
         logger.info(f"Test generation result: status={status}, has_error={'error' in result}")
         if status != 200:
             logger.error(f"Test generation failed: {result.get('error', 'Unknown error')}")
             raise HTTPException(status_code=status, detail=result.get("error", "Error generating test"))
+
+        # Save the generated test to database
+        db = SessionLocal()
+        try:
+            # Get lesson by lesson_id string
+            lesson = db.query(Lesson).filter(Lesson.lesson_id == lesson_id).first()
+            lesson_pk = lesson.id if lesson else None
+
+            # Create new generated test record
+            generated_test = GeneratedTest(
+                user_id=int(user["user_id"]),
+                lesson_id=lesson_pk,
+                title=result.get("title", "Generated Test"),
+                test_content=result,
+                questions_count=len(result.get("questions", [])),
+                is_private=True,
+                is_favorite=False
+            )
+
+            db.add(generated_test)
+            db.commit()
+            db.refresh(generated_test)
+
+            logger.info(f"Saved generated test {generated_test.id} for user {user['user_id']}")
+
+            # Add the test ID to the response
+            result["saved_test_id"] = generated_test.id
+
+        finally:
+            db.close()
+
         return result
     except HTTPException:
         raise

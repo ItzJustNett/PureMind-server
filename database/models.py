@@ -152,6 +152,33 @@ class CompletedExercise(Base):
     )
 
 
+class GeneratedTest(Base):
+    """AI-generated tests saved to user profiles"""
+    __tablename__ = "generated_tests"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    lesson_id = Column(Integer, ForeignKey("lessons.id"), nullable=True, index=True)
+
+    title = Column(String(500), nullable=False)
+    test_content = Column(JSON, nullable=False)  # Stores the full test JSON
+    questions_count = Column(Integer, nullable=False, default=10)
+
+    is_private = Column(Boolean, nullable=False, default=True)
+    is_favorite = Column(Boolean, nullable=False, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="generated_tests")
+    lesson = relationship("Lesson", backref="generated_tests")
+
+    __table_args__ = (
+        Index("idx_generated_tests_user", "user_id"),
+        Index("idx_generated_tests_created", "created_at"),
+    )
+
+
 class StoreItem(Base):
     """Purchasable cat accessories (normalized)"""
     __tablename__ = "store_items"
