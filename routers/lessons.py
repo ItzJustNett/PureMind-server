@@ -173,6 +173,9 @@ async def generate_lesson_test(lesson_id: str, user: dict = Depends(get_current_
 async def generate_conspect(lesson_id: str, user: dict = Depends(get_current_user)):
     """Generate a summary (conspect) for a lesson and save it (async with httpx)"""
     try:
+        from database import SessionLocal
+        from database.models import Lesson
+
         result, status = await async_managers.generate_conspect_async(lesson_id)
         if status != 200:
             raise HTTPException(status_code=status, detail=result.get("error", "Error generating conspect"))

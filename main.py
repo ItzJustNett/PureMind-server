@@ -61,7 +61,11 @@ app = FastAPI(
     title="Lessons API",
     description="API for managing lessons, courses, users, and profiles",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    # Disable docs in production for security
+    docs_url="/docs" if not IS_PRODUCTION else None,
+    redoc_url="/redoc" if not IS_PRODUCTION else None,
+    openapi_url="/openapi.json" if not IS_PRODUCTION else None,
 )
 
 # Add rate limiter to app state

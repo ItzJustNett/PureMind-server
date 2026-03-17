@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 class SavedTestResponse(BaseModel):
     id: int
-    lesson_id: Optional[int]
+    lesson_id: Optional[int]  # Database ID
+    lesson_string_id: Optional[str]  # Lesson identifier for navigation
     lesson_title: Optional[str]
     title: str
     questions_count: int
@@ -30,7 +31,8 @@ class SavedTestResponse(BaseModel):
 
 class SavedTestDetail(BaseModel):
     id: int
-    lesson_id: Optional[int]
+    lesson_id: Optional[int]  # Database ID
+    lesson_string_id: Optional[str]  # Lesson identifier for navigation
     lesson_title: Optional[str]
     title: str
     test_content: dict
@@ -56,14 +58,17 @@ async def get_saved_tests(user: dict = Depends(get_current_user)):
             results = []
             for test in tests:
                 lesson_title = None
+                lesson_string_id = None
                 if test.lesson_id:
                     lesson = db.query(Lesson).filter(Lesson.id == test.lesson_id).first()
                     if lesson:
                         lesson_title = lesson.title
+                        lesson_string_id = lesson.lesson_id  # The string ID for navigation
 
                 results.append({
                     "id": test.id,
                     "lesson_id": test.lesson_id,
+                    "lesson_string_id": lesson_string_id,
                     "lesson_title": lesson_title,
                     "title": test.title,
                     "questions_count": test.questions_count,
@@ -95,14 +100,17 @@ async def get_saved_test(test_id: int, user: dict = Depends(get_current_user)):
                 raise HTTPException(status_code=404, detail="Test not found")
 
             lesson_title = None
+            lesson_string_id = None
             if test.lesson_id:
                 lesson = db.query(Lesson).filter(Lesson.id == test.lesson_id).first()
                 if lesson:
                     lesson_title = lesson.title
+                    lesson_string_id = lesson.lesson_id  # The string ID for navigation
 
             return {
                 "id": test.id,
                 "lesson_id": test.lesson_id,
+                "lesson_string_id": lesson_string_id,
                 "lesson_title": lesson_title,
                 "title": test.title,
                 "test_content": test.test_content,
