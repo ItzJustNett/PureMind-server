@@ -170,12 +170,41 @@ async def generate_lesson_test(lesson_id: str, user: dict = Depends(get_current_
         raise HTTPException(status_code=500, detail=f"Error generating test: {str(e)}")
 
 @router.get("/{lesson_id}/conspect")
-async def generate_conspect(lesson_id: str):
-    """Generate a summary (conspect) for a lesson (async with httpx)"""
+async def generate_conspect(lesson_id: str, user: dict = Depends(get_current_user)):
+    """Generate a summary (conspect) for a lesson and save it (async with httpx)"""
     try:
         result, status = await async_managers.generate_conspect_async(lesson_id)
         if status != 200:
             raise HTTPException(status_code=status, detail=result.get("error", "Error generating conspect"))
+
+        # Save the generated summary to database
+        db = SessionLocal()
+        try:
+            # Find the lesson by lesson_id string
+            lesson = db.query(Lesson).filter(Lesson.lesson_id == lesson_id).first()
+            if lesson:
+                from database.models import SavedSummary
+
+                # Create saved summary
+                saved_summary = SavedSummary(
+                    user_id=int(user["user_id"]),
+                    lesson_id=lesson.id,
+                    title=result.get("title", lesson.title),
+                    summary=result.get("summary", ""),
+                    key_points=result.get("key_points", [])
+                )
+
+                db.add(saved_summary)
+                db.commit()
+                db.refresh(saved_summary)
+
+                logger.info(f"Saved conspect {saved_summary.id} for lesson {lesson_id}")
+
+                # Add saved_id to result
+                result["saved_id"] = saved_summary.id
+        finally:
+            db.close()
+
         return result
     except HTTPException:
         raise

@@ -179,6 +179,32 @@ class GeneratedTest(Base):
     )
 
 
+class SavedSummary(Base):
+    """AI-generated lesson summaries saved to user profiles"""
+    __tablename__ = "saved_summaries"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    lesson_id = Column(Integer, ForeignKey("lessons.id"), nullable=True, index=True)
+
+    title = Column(String(500), nullable=False)
+    summary = Column(Text, nullable=False)  # Main summary text
+    key_points = Column(JSON, nullable=True)  # Array of key points
+
+    is_favorite = Column(Boolean, nullable=False, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="saved_summaries")
+    lesson = relationship("Lesson", backref="saved_summaries")
+
+    __table_args__ = (
+        Index("idx_saved_summaries_user", "user_id"),
+        Index("idx_saved_summaries_created", "created_at"),
+    )
+
+
 class StoreItem(Base):
     """Purchasable cat accessories (normalized)"""
     __tablename__ = "store_items"
