@@ -53,6 +53,21 @@ async def lifespan(app: FastAPI):
     close_db()
     logger.info("Shutting down Lessons API")
 
+# CORS configuration - only allow localhost in development
+PRODUCTION_ORIGINS = [
+    "https://puremind.xoperr.dev",
+    "https://puremindd.netlify.app",
+]
+
+DEVELOPMENT_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+
+# Check if we're in production (no localhost needed)
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "production") == "production"
+allowed_origins = PRODUCTION_ORIGINS if IS_PRODUCTION else PRODUCTION_ORIGINS + DEVELOPMENT_ORIGINS
+
 # Create rate limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
@@ -71,21 +86,6 @@ app = FastAPI(
 # Add rate limiter to app state
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# CORS configuration - only allow localhost in development
-PRODUCTION_ORIGINS = [
-    "https://puremind.xoperr.dev",
-    "https://puremindd.netlify.app",
-]
-
-DEVELOPMENT_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-]
-
-# Check if we're in production (no localhost needed)
-IS_PRODUCTION = os.getenv("ENVIRONMENT", "production") == "production"
-allowed_origins = PRODUCTION_ORIGINS if IS_PRODUCTION else PRODUCTION_ORIGINS + DEVELOPMENT_ORIGINS
 
 # Enable CORS (must be first middleware)
 app.add_middleware(
