@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 class SavedSummaryResponse(BaseModel):
     id: int
-    lesson_id: Optional[int]
+    lesson_id: Optional[int]  # Database ID
+    lesson_string_id: Optional[str]  # Lesson identifier for navigation
     lesson_title: Optional[str]
     title: str
     summary: str
@@ -48,14 +49,17 @@ async def get_saved_summaries(user: dict = Depends(get_current_user)):
             results = []
             for summary in summaries:
                 lesson_title = None
+                lesson_string_id = None
                 if summary.lesson_id:
                     lesson = db.query(Lesson).filter(Lesson.id == summary.lesson_id).first()
                     if lesson:
                         lesson_title = lesson.title
+                        lesson_string_id = lesson.lesson_id  # The string ID for navigation
 
                 results.append({
                     "id": summary.id,
                     "lesson_id": summary.lesson_id,
+                    "lesson_string_id": lesson_string_id,
                     "lesson_title": lesson_title,
                     "title": summary.title,
                     "summary": summary.summary,
@@ -87,14 +91,17 @@ async def get_saved_summary(summary_id: int, user: dict = Depends(get_current_us
                 raise HTTPException(status_code=404, detail="Summary not found")
 
             lesson_title = None
+            lesson_string_id = None
             if summary.lesson_id:
                 lesson = db.query(Lesson).filter(Lesson.id == summary.lesson_id).first()
                 if lesson:
                     lesson_title = lesson.title
+                    lesson_string_id = lesson.lesson_id  # The string ID for navigation
 
             return {
                 "id": summary.id,
                 "lesson_id": summary.lesson_id,
+                "lesson_string_id": lesson_string_id,
                 "lesson_title": lesson_title,
                 "title": summary.title,
                 "summary": summary.summary,
@@ -143,6 +150,7 @@ async def create_saved_summary(
             return {
                 "id": summary.id,
                 "lesson_id": summary.lesson_id,
+                "lesson_string_id": lesson.lesson_id,  # The string ID for navigation
                 "lesson_title": lesson.title,
                 "title": summary.title,
                 "summary": summary.summary,
