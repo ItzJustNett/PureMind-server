@@ -25,6 +25,10 @@ sqlalchemy==2.0.25
 psycopg2-binary==2.9.9
 alembic==1.13.1
 
+# Security
+bcrypt==4.1.2
+slowapi==0.1.9
+
 # CLI tools (optional - only for nicer-cli-client.py)
 # Uncomment if you need the CLI client:
 # rich==13.0.0

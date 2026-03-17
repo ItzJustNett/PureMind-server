@@ -2,11 +2,14 @@
 FastAPI version of the Lessons API
 Main application entry point
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 import os
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 import lessons_manager
 from database import init_db, check_db_connection, close_db
@@ -50,6 +53,9 @@ async def lifespan(app: FastAPI):
     close_db()
     logger.info("Shutting down Lessons API")
 
+# Create rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+
 # Create FastAPI app
 app = FastAPI(
     title="Lessons API",
@@ -58,15 +64,29 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS configuration - only allow localhost in development
+PRODUCTION_ORIGINS = [
+    "https://puremind.xoperr.dev",
+    "https://puremindd.netlify.app",
+]
+
+DEVELOPMENT_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+
+# Check if we're in production (no localhost needed)
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "production") == "production"
+allowed_origins = PRODUCTION_ORIGINS if IS_PRODUCTION else PRODUCTION_ORIGINS + DEVELOPMENT_ORIGINS
+
 # Enable CORS (must be first middleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://puremind.xoperr.dev",
-        "https://puremindd.netlify.app",  # Netlify deployment
-        "http://localhost:3000",      # для локальної розробки
-        "http://localhost:5173",      # для Vite
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "*"],
@@ -77,15 +97,27 @@ app.add_middleware(
 from routers import lessons, auth, profiles, speech, debug, oauth, saved_tests, saved_summaries
 
 # Exception handler for HTTPException to ensure CORS headers are included
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from starlette.responses import JSONResponse
 
+# Use the same allowed origins as the middleware
+ALLOWED_ORIGINS = allowed_origins
+
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(request: Request, exc):
+    # Get the origin from the request
+    origin = request.headers.get("origin")
+    headers = {}
+
+    # Only set CORS header if origin is allowed
+    if origin in ALLOWED_ORIGINS:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
-        headers={"Access-Control-Allow-Origin": "*"}
+        headers=headers
     )
 
 # Include routers

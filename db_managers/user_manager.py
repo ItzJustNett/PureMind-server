@@ -3,6 +3,7 @@ User management - database operations for user accounts.
 Replaces auth.py data logic.
 """
 import hashlib
+import bcrypt
 import logging
 from typing import Optional, Dict, Tuple
 from sqlalchemy.orm import Session
@@ -13,7 +14,24 @@ logger = logging.getLogger(__name__)
 
 
 def hash_password(password: str) -> str:
-    """Hash a password using SHA-256"""
+    """Hash a password using bcrypt"""
+    # Generate salt and hash password
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against a bcrypt hash"""
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    except Exception as e:
+        logger.error(f"Error verifying password: {e}")
+        return False
+
+
+def _legacy_hash_password(password: str) -> str:
+    """Legacy SHA-256 hash (for migration compatibility)"""
     return hashlib.sha256(password.encode()).hexdigest()
 
 
@@ -82,12 +100,26 @@ def get_user_by_id(db: Session, user_id: int) -> Optional[Dict]:
 
 
 def validate_password(db: Session, username: str, password: str) -> bool:
-    """Validate user password"""
+    """Validate user password (supports both bcrypt and legacy SHA-256)"""
     try:
         user = db.query(User).filter(User.username == username).first()
         if not user:
             return False
-        return user.password_hash == hash_password(password)
+
+        # Try bcrypt first (new format starts with $2b$)
+        if user.password_hash.startswith('$2b$'):
+            is_valid = verify_password(password, user.password_hash)
+            return is_valid
+
+        # Fall back to legacy SHA-256 for old passwords
+        if user.password_hash == _legacy_hash_password(password):
+            # Auto-upgrade to bcrypt on successful login
+            logger.info(f"Upgrading password hash for user {username} to bcrypt")
+            user.password_hash = hash_password(password)
+            db.commit()
+            return True
+
+        return False
     except Exception as e:
         logger.error(f"Error validating password: {e}")
         return False

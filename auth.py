@@ -82,3 +82,13 @@ def get_user_by_id(user_id: int) -> Optional[Dict]:
         return user_manager.get_user_by_id(db, user_id)
     finally:
         db.close()
+
+
+def hash_password(password: str) -> str:
+    """Hash a password"""
+    return user_manager.hash_password(password)
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against a hash"""
+    return user_manager.verify_password(password, hashed)
