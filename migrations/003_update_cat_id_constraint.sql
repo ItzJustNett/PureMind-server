@@ -1,12 +1,9 @@
--- Migration: Update cat_id constraint to allow only 0 and 1
+-- Migration: Fix cat_id constraint to properly allow all three cats
 -- Date: 2026-03-20
--- Description: Remove black cat (cat_id=2) from valid options
+-- Description: Ensure all three cats (0=orange, 1=gray, 2=black) are allowed
 
--- Drop the old constraint
+-- Drop the old constraint if it exists
 ALTER TABLE profiles DROP CONSTRAINT IF EXISTS valid_cat_id;
 
--- Add the new constraint
-ALTER TABLE profiles ADD CONSTRAINT valid_cat_id CHECK (cat_id IN (0, 1));
-
--- Update any existing profiles with cat_id=2 to cat_id=0 (orange cat)
-UPDATE profiles SET cat_id = 0 WHERE cat_id = 2;
+-- Add the correct constraint allowing all three cats
+ALTER TABLE profiles ADD CONSTRAINT valid_cat_id CHECK (cat_id IN (0, 1, 2));

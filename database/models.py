@@ -62,7 +62,7 @@ class Profile(Base):
 
     # Constraints
     __table_args__ = (
-        CheckConstraint("cat_id IN (0, 1)", name="valid_cat_id"),
+        CheckConstraint("cat_id IN (0, 1, 2)", name="valid_cat_id"),
         CheckConstraint("illness_id BETWEEN 0 AND 5", name="valid_illness_id"),
         CheckConstraint("xp >= 0", name="non_negative_xp"),
         CheckConstraint("meowcoins >= 0", name="non_negative_meowcoins"),
