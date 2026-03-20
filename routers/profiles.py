@@ -22,7 +22,7 @@ class ProfileRequest(BaseModel):
 
 class SetupRequest(BaseModel):
     grade: int  # User's grade/class (6-11)
-    cat_id: int  # User's cat selection (0, 1, 2)
+    cat_id: int  # User's cat selection (0, 1)
 
 class ExerciseCheckRequest(BaseModel):
     correct_answers: int
@@ -109,8 +109,8 @@ async def complete_setup(data: SetupRequest, user: dict = Depends(get_current_us
         if data.grade < 6 or data.grade > 11:
             raise HTTPException(status_code=400, detail="Grade must be between 6 and 11")
 
-        if data.cat_id not in [0, 1, 2]:
-            raise HTTPException(status_code=400, detail="Cat ID must be 0, 1, or 2")
+        if data.cat_id not in [0, 1]:
+            raise HTTPException(status_code=400, detail="Cat ID must be 0 or 1")
 
         # Get user info for default name
         user_info = await async_managers.get_user_by_id_async(user["user_id"])

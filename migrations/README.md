@@ -25,6 +25,8 @@ The API automatically creates all tables defined in the models when it starts up
 ## Migration Files
 
 - `001_create_generated_tests_table.sql` - Creates the `generated_tests` table for storing user's saved AI-generated tests
+- `002_create_saved_summaries_table.sql` - Creates the `saved_summaries` table for storing user's saved AI-generated summaries
+- `003_update_cat_id_constraint.sql` - Updates the cat_id constraint to allow only cats 0 and 1 (removes black cat option)
 
 ## Notes
 

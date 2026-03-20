@@ -13,7 +13,7 @@ from database.models import Profile, User, CompletedExercise, Exercise, StoreIte
 logger = logging.getLogger(__name__)
 
 # Valid configurations
-VALID_CAT_IDS = [0, 1, 10]
+VALID_CAT_IDS = [0, 1]
 ILLNESSES = {
     0: "None",
     1: "Dyslexia",
