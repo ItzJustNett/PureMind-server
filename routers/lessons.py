@@ -292,6 +292,57 @@ async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends
         logger.error(f"Error submitting test: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error submitting test: {str(e)}")
 
+@router.post("/{lesson_id}/complete")
+async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)):
+    """Mark a lesson as completed and award rewards"""
+    try:
+        from database import SessionLocal
+        from database.models import Profile, Lesson
+
+        db = SessionLocal()
+        try:
+            # Verify lesson exists
+            lesson = db.query(Lesson).filter(Lesson.lesson_id == lesson_id).first()
+            if not lesson:
+                raise HTTPException(status_code=404, detail="Lesson not found")
+
+            # Get user profile
+            profile = db.query(Profile).filter(Profile.user_id == int(user["user_id"])).first()
+            if not profile:
+                raise HTTPException(status_code=404, detail="Profile not found")
+
+            # Award small XP reward for completing a lesson
+            xp_earned = 10
+            meowcoins_earned = 5
+
+            profile.lessons_completed += 1
+            profile.xp += xp_earned
+            profile.meowcoins += meowcoins_earned
+            db.commit()
+
+            # Update streak
+            from db_managers import profile_manager
+            profile_manager.update_streak(db, int(user["user_id"]))
+
+            logger.info(f"Lesson {lesson_id} completed by user {user['user_id']}")
+
+            return {
+                "success": True,
+                "lesson_id": lesson_id,
+                "xp_earned": xp_earned,
+                "meowcoins_earned": meowcoins_earned,
+                "total_xp": profile.xp,
+                "total_meowcoins": profile.meowcoins,
+                "lessons_completed": profile.lessons_completed
+            }
+        finally:
+            db.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error completing lesson: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error completing lesson: {str(e)}")
+
 @router.get("/test-openrouter")
 async def test_openrouter():
     """Test OpenRouter API connection (async)"""
