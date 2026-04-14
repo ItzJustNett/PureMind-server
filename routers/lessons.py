@@ -299,30 +299,39 @@ async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)
         from database import SessionLocal
         from database.models import Profile
 
+        logger.info(f"=== COMPLETE LESSON START: lesson_id={lesson_id}, user_id={user['user_id']} ===")
+
         db = SessionLocal()
         try:
             # Get user profile
             profile = db.query(Profile).filter(Profile.user_id == int(user["user_id"])).first()
             if not profile:
+                logger.error(f"Profile not found for user {user['user_id']}")
                 raise HTTPException(status_code=404, detail="Profile not found")
+
+            logger.info(f"Before update: lessons_completed={profile.lessons_completed}, xp={profile.xp}, meowcoins={profile.meowcoins}")
 
             # Award small XP reward for completing a lesson
             xp_earned = 10
             meowcoins_earned = 5
 
+            old_lessons = profile.lessons_completed
             profile.lessons_completed += 1
             profile.xp += xp_earned
             profile.meowcoins += meowcoins_earned
+
+            logger.info(f"After increment: lessons_completed={profile.lessons_completed} (was {old_lessons})")
+
             db.commit()
             db.refresh(profile)
+
+            logger.info(f"After commit: lessons_completed={profile.lessons_completed}, xp={profile.xp}, meowcoins={profile.meowcoins}")
 
             # Update streak
             from db_managers import profile_manager
             profile_manager.update_streak(db, int(user["user_id"]))
 
-            logger.info(f"Lesson {lesson_id} completed by user {user['user_id']}, total: {profile.lessons_completed}")
-
-            return {
+            response_data = {
                 "success": True,
                 "lesson_id": lesson_id,
                 "xp_earned": xp_earned,
@@ -331,6 +340,9 @@ async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)
                 "total_meowcoins": profile.meowcoins,
                 "lessons_completed": profile.lessons_completed
             }
+
+            logger.info(f"=== COMPLETE LESSON END: returning {response_data} ===")
+            return response_data
         finally:
             db.close()
     except HTTPException:

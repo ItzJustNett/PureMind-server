@@ -75,11 +75,13 @@ async def get_my_stats(user: dict = Depends(get_current_user)):
                 raise HTTPException(status_code=404, detail="Profile not found")
 
             # Use the actual tracked values from profile
-            return {
+            stats = {
                 "streak": profile.current_streak or 0,
                 "lessons_completed": profile.lessons_completed or 0,
                 "tests_completed": profile.tests_completed or 0
             }
+            logger.info(f"=== STATS for user {user['user_id']}: {stats} ===")
+            return stats
         finally:
             db.close()
     except HTTPException:
