@@ -241,10 +241,10 @@ async def add_lesson(lesson_data: dict):
 
 @router.post("/{lesson_id}/test/submit")
 async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends(get_current_user)):
-    """Submit test results and award meowcoins"""
+    """Submit test results and award meowcoins (also marks lesson as complete)"""
     try:
         from database import SessionLocal
-        from database.models import Profile
+        from database.models import Profile, CompletedLesson
 
         if data.score < 0 or data.total_questions <= 0:
             raise HTTPException(status_code=400, detail="Invalid score or total_questions")
@@ -258,7 +258,8 @@ async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends
         # Award meowcoins and XP to user
         db = SessionLocal()
         try:
-            profile = db.query(Profile).filter(Profile.user_id == int(user["user_id"])).first()
+            user_id = int(user["user_id"])
+            profile = db.query(Profile).filter(Profile.user_id == user_id).first()
 
             if not profile:
                 raise HTTPException(status_code=404, detail="Profile not found")
@@ -266,13 +267,30 @@ async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends
             profile.meowcoins += meowcoins_earned
             profile.xp += xp_earned
             profile.tests_completed += 1
+
+            # Mark lesson as complete (if not already)
+            existing = db.query(CompletedLesson).filter(
+                CompletedLesson.user_id == user_id,
+                CompletedLesson.lesson_id == lesson_id
+            ).first()
+
+            lesson_newly_completed = False
+            if not existing:
+                # First time completing this lesson
+                profile.lessons_completed += 1
+                completion = CompletedLesson(user_id=user_id, lesson_id=lesson_id)
+                db.add(completion)
+                lesson_newly_completed = True
+                logger.info(f"Lesson {lesson_id} completed for first time via test by user {user_id}")
+
             db.commit()
+            db.refresh(profile)
 
             # Update streak
             from db_managers import profile_manager
-            profile_manager.update_streak(db, int(user["user_id"]))
+            profile_manager.update_streak(db, user_id)
 
-            logger.info(f"Test {lesson_id} completed by user {user['user_id']}, earned {meowcoins_earned} meowcoins")
+            logger.info(f"Test {lesson_id} completed by user {user_id}, earned {meowcoins_earned} meowcoins")
 
             return {
                 "success": True,
@@ -282,7 +300,9 @@ async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends
                 "meowcoins_earned": meowcoins_earned,
                 "xp_earned": xp_earned,
                 "total_meowcoins": profile.meowcoins,
-                "total_xp": profile.xp
+                "total_xp": profile.xp,
+                "lessons_completed": profile.lessons_completed,
+                "lesson_newly_completed": lesson_newly_completed
             }
         finally:
             db.close()
@@ -294,19 +314,42 @@ async def submit_test(lesson_id: str, data: TestSubmission, user: dict = Depends
 
 @router.post("/{lesson_id}/complete")
 async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)):
-    """Mark a lesson as completed and award rewards"""
+    """Mark a lesson as completed and award rewards (only once per lesson)"""
     try:
         from database import SessionLocal
-        from database.models import Profile
+        from database.models import Profile, CompletedLesson
 
         logger.info(f"=== COMPLETE LESSON START: lesson_id={lesson_id}, user_id={user['user_id']} ===")
 
         db = SessionLocal()
         try:
+            user_id = int(user["user_id"])
+
+            # Check if lesson already completed
+            existing = db.query(CompletedLesson).filter(
+                CompletedLesson.user_id == user_id,
+                CompletedLesson.lesson_id == lesson_id
+            ).first()
+
+            if existing:
+                logger.info(f"Lesson {lesson_id} already completed by user {user_id} at {existing.completed_at}")
+                # Get current profile stats for response
+                profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+                return {
+                    "success": True,
+                    "already_completed": True,
+                    "lesson_id": lesson_id,
+                    "xp_earned": 0,
+                    "meowcoins_earned": 0,
+                    "total_xp": profile.xp if profile else 0,
+                    "total_meowcoins": profile.meowcoins if profile else 0,
+                    "lessons_completed": profile.lessons_completed if profile else 0
+                }
+
             # Get user profile
-            profile = db.query(Profile).filter(Profile.user_id == int(user["user_id"])).first()
+            profile = db.query(Profile).filter(Profile.user_id == user_id).first()
             if not profile:
-                logger.error(f"Profile not found for user {user['user_id']}")
+                logger.error(f"Profile not found for user {user_id}")
                 raise HTTPException(status_code=404, detail="Profile not found")
 
             logger.info(f"Before update: lessons_completed={profile.lessons_completed}, xp={profile.xp}, meowcoins={profile.meowcoins}")
@@ -320,6 +363,13 @@ async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)
             profile.xp += xp_earned
             profile.meowcoins += meowcoins_earned
 
+            # Create completion record
+            completion = CompletedLesson(
+                user_id=user_id,
+                lesson_id=lesson_id
+            )
+            db.add(completion)
+
             logger.info(f"After increment: lessons_completed={profile.lessons_completed} (was {old_lessons})")
 
             db.commit()
@@ -329,10 +379,11 @@ async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)
 
             # Update streak
             from db_managers import profile_manager
-            profile_manager.update_streak(db, int(user["user_id"]))
+            profile_manager.update_streak(db, user_id)
 
             response_data = {
                 "success": True,
+                "already_completed": False,
                 "lesson_id": lesson_id,
                 "xp_earned": xp_earned,
                 "meowcoins_earned": meowcoins_earned,

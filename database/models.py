@@ -126,6 +126,20 @@ class Exercise(Base):
     completed_exercises = relationship("CompletedExercise", back_populates="exercise")
 
 
+class CompletedLesson(Base):
+    """Tracks which lessons each user has completed (once per lesson)"""
+    __tablename__ = "completed_lessons"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    lesson_id = Column(String(255), nullable=False, index=True)  # lesson_id string (not FK)
+    completed_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        Index("idx_completed_user_lesson", "user_id", "lesson_id", unique=True),
+    )
+
+
 class CompletedExercise(Base):
     """Tracks user exercise completions with rewards"""
     __tablename__ = "completed_exercises"
