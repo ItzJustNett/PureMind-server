@@ -297,15 +297,10 @@ async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)
     """Mark a lesson as completed and award rewards"""
     try:
         from database import SessionLocal
-        from database.models import Profile, Lesson
+        from database.models import Profile
 
         db = SessionLocal()
         try:
-            # Verify lesson exists
-            lesson = db.query(Lesson).filter(Lesson.lesson_id == lesson_id).first()
-            if not lesson:
-                raise HTTPException(status_code=404, detail="Lesson not found")
-
             # Get user profile
             profile = db.query(Profile).filter(Profile.user_id == int(user["user_id"])).first()
             if not profile:
@@ -319,12 +314,13 @@ async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)
             profile.xp += xp_earned
             profile.meowcoins += meowcoins_earned
             db.commit()
+            db.refresh(profile)
 
             # Update streak
             from db_managers import profile_manager
             profile_manager.update_streak(db, int(user["user_id"]))
 
-            logger.info(f"Lesson {lesson_id} completed by user {user['user_id']}")
+            logger.info(f"Lesson {lesson_id} completed by user {user['user_id']}, total: {profile.lessons_completed}")
 
             return {
                 "success": True,
@@ -340,7 +336,7 @@ async def complete_lesson(lesson_id: str, user: dict = Depends(get_current_user)
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error completing lesson: {str(e)}")
+        logger.error(f"Error completing lesson: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error completing lesson: {str(e)}")
 
 @router.get("/test-openrouter")
