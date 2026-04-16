@@ -90,7 +90,7 @@ def create_or_update_profile(
         status_code = 201 if is_new else 200
         logger.info(f"{'Created' if is_new else 'Updated'} profile for user ID: {user_id}")
 
-        return profile_to_dict(profile), status_code
+        return profile_to_dict(profile, db), status_code
     except Exception as e:
         db.rollback()
         logger.error(f"Error in create_or_update_profile: {e}")
@@ -102,7 +102,7 @@ def get_profile(db: Session, user_id: int) -> Optional[Dict]:
     try:
         profile = db.query(Profile).filter(Profile.user_id == user_id).first()
         if profile:
-            return profile_to_dict(profile)
+            return profile_to_dict(profile, db)
         return None
     except Exception as e:
         logger.error(f"Error getting profile: {e}")
@@ -290,14 +290,14 @@ def update_streak(db: Session, user_id: int) -> Dict:
         return {"error": "Failed to update streak"}
 
 
-def profile_to_dict(profile: Profile) -> Dict:
+def profile_to_dict(profile: Profile, db: Session = None) -> Dict:
     """Convert profile object to dictionary"""
     # Calculate level based on XP (every 1000 XP = 1 level)
     level = (profile.xp // 1000) + 1
     # Calculate XP needed for next level
     max_xp = level * 1000
 
-    return {
+    result = {
         "user_id": profile.user_id,
         "name": profile.name,
         "about": profile.about,
@@ -317,6 +317,13 @@ def profile_to_dict(profile: Profile) -> Dict:
         "last_activity_date": profile.last_activity_date.isoformat() if profile.last_activity_date else None,
         "created_at": profile.created_at.isoformat()
     }
+
+    if db is not None:
+        from db_managers import store_manager
+        result["inventory"] = store_manager.get_user_inventory(db, profile.user_id)
+        result["equipped_items"] = store_manager.get_equipped_items(db, profile.user_id)
+
+    return result
 
 
 def get_equipped_items_list(db: Session, user_id: int) -> List[str]:

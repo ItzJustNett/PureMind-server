@@ -47,7 +47,8 @@ STORE_ITEMS = {
     "tie": {"price": 140, "description": "Professional business tie 👔"},
     "collar": {"price": 100, "description": "Stylish spiked collar 🔷"},
     "badge": {"price": 180, "description": "Sheriff badge for law-abiding cats ⭐"},
-    "goggles": {"price": 200, "description": "Cool aviator goggles 🥽"}
+    "goggles": {"price": 200, "description": "Cool aviator goggles 🥽"},
+    "hat": {"price": 160, "description": "A classic hat for your cat 🎩"}
 }
 
 def main():
