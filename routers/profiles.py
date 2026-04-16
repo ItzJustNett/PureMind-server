@@ -160,7 +160,8 @@ async def create_or_update_profile(data: ProfileRequest, user: dict = Depends(ge
                 data.name,
                 data.about or "",
                 data.cat_id or 0,
-                data.illness_id or 0
+                data.illness_id or 0,
+                data.grade
             )
         finally:
             db.close()
@@ -190,7 +191,8 @@ async def update_profile(data: ProfileRequest, user: dict = Depends(get_current_
                 data.name,
                 data.about or "",
                 data.cat_id or 0,
-                data.illness_id or 0
+                data.illness_id or 0,
+                data.grade
             )
         finally:
             db.close()
