@@ -20,35 +20,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 STORE_ITEMS = {
-    # Existing items
     "sunglasses": {"price": 100, "description": "Cool sunglasses for your cat 😎"},
-    "cap": {"price": 150, "description": "A stylish cap for your cat 🧢"},
-    "moustache": {"price": 200, "description": "A fancy moustache for your cat 🥸"},
-    "butterfly": {"price": 250, "description": "A cute butterfly accessory 🦋"},
-
-    # New accessories
-    "bow-tie": {"price": 120, "description": "Elegant bow tie for a classy cat 🎀"},
     "crown": {"price": 300, "description": "Royal crown fit for a king/queen cat 👑"},
-    "glasses": {"price": 180, "description": "Smart reading glasses 🤓"},
-    "party-hat": {"price": 150, "description": "Fun party hat for celebrations 🎉"},
     "scarf": {"price": 200, "description": "Cozy winter scarf 🧣"},
-    "bandana": {"price": 130, "description": "Cool bandana for adventurous cats 🏴‍☠️"},
-    "flower": {"price": 110, "description": "Pretty flower accessory 🌸"},
-    "bow": {"price": 140, "description": "Cute hair bow 🎀"},
-    "top-hat": {"price": 250, "description": "Fancy top hat for special occasions 🎩"},
-    "headphones": {"price": 220, "description": "Music-loving cat headphones 🎧"},
-    "wizard-hat": {"price": 280, "description": "Magical wizard hat ✨"},
-    "pirate-hat": {"price": 270, "description": "Arr matey! Pirate captain hat 🏴‍☠️"},
-    "santa-hat": {"price": 160, "description": "Festive Santa hat for holidays 🎅"},
-    "chef-hat": {"price": 190, "description": "Master chef hat for foodie cats 👨‍🍳"},
-    "beret": {"price": 170, "description": "Artistic French beret 🎨"},
-    "necklace": {"price": 240, "description": "Sparkly diamond necklace 💎"},
-    "monocle": {"price": 210, "description": "Distinguished monocle 🧐"},
-    "tie": {"price": 140, "description": "Professional business tie 👔"},
-    "collar": {"price": 100, "description": "Stylish spiked collar 🔷"},
-    "badge": {"price": 180, "description": "Sheriff badge for law-abiding cats ⭐"},
-    "goggles": {"price": 200, "description": "Cool aviator goggles 🥽"},
-    "hat": {"price": 160, "description": "A classic hat for your cat 🎩"}
 }
 
 def main():
@@ -83,10 +57,14 @@ def main():
                 items_added += 1
                 logger.info(f"Added: {item_id}")
 
+        # Remove items not in STORE_ITEMS
+        removed = db.query(StoreItem).filter(StoreItem.item_id.notin_(STORE_ITEMS.keys())).delete(synchronize_session=False)
+
         db.commit()
 
         logger.info(f"\n✓ Added {items_added} new items")
         logger.info(f"✓ Updated {items_updated} existing items")
+        logger.info(f"✓ Removed {removed} old items")
         logger.info(f"✓ Total store items: {len(STORE_ITEMS)}")
 
     except Exception as e:
