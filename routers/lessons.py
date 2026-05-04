@@ -3,6 +3,7 @@ Lessons API routes (FastAPI version with async optimization)
 """
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
+from typing import Optional
 import json
 import logging
 import lessons_manager
@@ -75,6 +76,35 @@ async def search_lessons(q: str = Query(..., min_length=1)):
     except Exception as e:
         logger.error(f"Error searching lessons: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error searching lessons: {str(e)}")
+
+@router.get("/semantic-search")
+async def semantic_search_lessons(
+    q:       str           = Query(..., min_length=1, description="Semantic search query"),
+    grade:   Optional[str] = Query(None, description="Filter by grade (e.g. '10')"),
+    subject: Optional[str] = Query(None, description="Filter by subject slug prefix"),
+    limit:   int           = Query(30, ge=1, le=100),
+    offset:  int           = Query(0, ge=0),
+):
+    """
+    Semantic search using SBERT embeddings.
+    Returns HTTP 503 while the model is warming up (~10s after server start).
+    """
+    from search_service import search_service
+    if not search_service.is_ready():
+        raise HTTPException(
+            status_code=503,
+            detail="semantic search warming up, try again in a few seconds",
+        )
+    try:
+        payload = search_service.search(
+            q=q, grade=grade, subject=subject,
+            limit=limit, offset=offset,
+        )
+        return payload
+    except Exception as e:
+        logger.error(f"semantic_search error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
+
 
 @router.get("/{lesson_id}")
 async def get_lesson(lesson_id: str):

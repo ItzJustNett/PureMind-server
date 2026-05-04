@@ -46,6 +46,11 @@ async def lifespan(app: FastAPI):
     cleanup_task = asyncio.create_task(async_managers.token_manager.cleanup_expired())
     logger.info("Token cleanup task started (runs every hour)")
 
+    # Start semantic search warm-up (non-blocking — endpoint returns 503 until ready)
+    from search_service import search_service
+    asyncio.create_task(search_service.warm_start())
+    logger.info("Semantic search warm-up started in background")
+
     yield
 
     # Shutdown
