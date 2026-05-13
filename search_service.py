@@ -22,7 +22,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-VIDEO_DB_PATH = Path(__file__).parent.parent / "New search model" / "video_db.json"
+VIDEO_DB_PATH = Path(__file__).parent / "video_db.json"
 
 # ── SBERT model name ──────────────────────────────────────────────────────────
 SBERT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"

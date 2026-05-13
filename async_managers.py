@@ -15,7 +15,7 @@ import asyncio
 logger = logging.getLogger(__name__)
 
 # ==============================================================================
-# ASYNC LESSONS MANAGER
+# ASYNC LESSONS MANAGER 
 # ==============================================================================
 
 async def search_lessons_async(query: str):
